@@ -10,11 +10,13 @@ export default function Kingdom() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
         <div className="text-center md:text-right space-y-4">
           <h3>Greek</h3>
-          <p className="font-body italic text-sm">Some information goes here.</p>
+          <p className="font-body italic text-sm">Founded by Name, relation.</p>
+          <p className="font-body italic text-sm">Located in Region, Country.</p>
         </div>
         <div className="text-center md:text-left space-y-4">
           <h3>Medieval</h3>
-          <p className="font-body italic text-sm">Some information goes here.</p>
+          <p className="font-body italic text-sm">Founded by Name, relation.</p>
+          <p className="font-body italic text-sm">Located in Region, Country.</p>
         </div>
       </div>
     </div>
