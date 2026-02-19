@@ -13,7 +13,7 @@ export default function Characters() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase.from("characters").select("*");
+      const { data } = await supabase.from("characters").select("*").order("name", { ascending: true });
       setCharacters(data ?? []);
     }
     fetchData();
@@ -36,7 +36,7 @@ export default function Characters() {
       <div className="text-center">
         <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Character</button>
       </div>
-      <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-0">
         {characters.map(char => (
           <Character key={char.id} data={char} />
         ))}
