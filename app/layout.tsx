@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className={`${cinzel.variable} ${lato.variable} antialiased`}>
         <div className="before:content-[''] before:fixed before:inset-0 before:bg-[url('/hero.png')] before:bg-cover before:bg-center before:opacity-20 before:-z-1"></div>
         <Navbar />
-        <main className="space-y-16 px-4 py-16 max-w-7xl mx-auto">{children}</main>
+        <main className="space-y-16 px-4 pt-16 max-w-7xl mx-auto">{children}</main>
       </body>
     </html>
   );
