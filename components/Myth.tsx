@@ -18,7 +18,7 @@ export default function Myth({ data }: { data: My }) {
   }, [data.id]);
 
   return (
-    <div className="card p-0 overflow-hidden">
+    <Link href={`/myths/${data.id}`} className="card p-0 overflow-hidden">
       <div className="h-2 w-full bg-gradient-to-r from-primary via-secondary to-primary"></div>
       <div className="p-6">
         <h3>{data.title}</h3>
@@ -32,6 +32,6 @@ export default function Myth({ data }: { data: My }) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
