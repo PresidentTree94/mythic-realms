@@ -42,11 +42,13 @@ export default function MyCh({ data }: { data: MyChar }) {
 
   return (
     <>
-      <div className="card p-0 overflow-hidden">
+      <div className="card p-0 overflow-hidden flex flex-col">
         <div className="h-2 w-full bg-gradient-to-r from-primary via-secondary to-primary"></div>
-        <div className="p-6 space-y-4">
-          <h3>{inspiration}</h3>
-          <p className="font-serif">{data.contribution}</p>
+        <div className="p-6 flex flex-col justify-between gap-4 flex-1">
+          <div>
+            <h3>{inspiration}</h3>
+            <p className="font-serif">{data.contribution}</p>
+          </div>
           <button onClick={() => setOpen(true)} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>
         </div>
       </div>

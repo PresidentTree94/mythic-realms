@@ -10,7 +10,7 @@ export default function Myth({ data }: { data: My }) {
   useEffect(() => {
     const fetchData = async () => {
       const { data: chars } = await supabase.from("myth_chars").select("*").eq("myth_id", data.id);
-      const charIds = chars?.map(c => c.char_id) ?? [];
+      const charIds = chars?.map(c => c.character_id) ?? [];
       const { data: characters } = await supabase.from("characters").select("*").in("id", charIds);
       setCharacters(characters ?? []);
     }
