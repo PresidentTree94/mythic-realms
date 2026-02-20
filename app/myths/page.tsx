@@ -50,7 +50,7 @@ export default function Myths() {
       <div className="text-center">
         <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Myth</button>
       </div>
-      <article className="columns-1 md:columns-2 lg:columns-3 space-y-8 gap-8 break-inside-avoid">
+      <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {myths.map((myth) => (
           <Myth key={myth.id} data={myth} />
         ))}
