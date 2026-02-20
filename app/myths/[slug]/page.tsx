@@ -80,7 +80,7 @@ export default function MythPage() {
       const { data: newChar } = await supabase.from("characters").insert({ inspiration: inspiration.trim() }).select("*").single();
       character = newChar;
     }
-    await supabase.from("myth_chars").insert({ myth_id: slug, char_id: character.id, contribution: contribution.trim() });
+    await supabase.from("myth_chars").insert({ myth_id: Number(slug), char_id: character.id, contribution: contribution.trim() });
 
     setInspiration("");
     setContribution("");

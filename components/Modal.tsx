@@ -10,7 +10,7 @@ export default function Modal({
   handleSubmit: React.SubmitEventHandler<HTMLFormElement>;
 }>) {
   return (
-    <div className={`fixed inset-0 bg-black/50 z-3 ${open ? "flex" : "hidden"} justify-center items-center`}>
+    <div className={`fixed inset-0 bg-black/50 z-3 ${open ? "flex" : "hidden"} justify-center items-center mb-0`}>
       <div className="card m-8 max-w-sm">
         <h3 className="text-center">{heading}</h3>
         <form className="grid grid-cols-[auto_1fr] gap-4 items-center mt-4 font-body" onSubmit={handleSubmit}>
