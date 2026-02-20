@@ -27,7 +27,7 @@ export default function Myth({ data }: { data: My }) {
           <p className="text-xs font-bold uppercase tracking-widest">Key Figures</p>
           <div className="flex flex-wrap gap-2 text-xs font-medium mt-2">
             {characters.map(c => (
-              c.name ? <Link key={c.id} href={`/characters`} className="px-2 py-1 bg-secondary/20 rounded">{c.name}</Link> : <Link key={c.id} href={`/characters?inspiration=${c.inspiration}`} className="px-2 py-1 bg-primary/20 rounded">{c.inspiration}</Link>
+              c.name ? <Link key={c.id} href={`/characters`} className="px-2 py-1 bg-secondary/20 rounded">{c.inspiration}</Link> : <Link key={c.id} href={`/characters?inspiration=${c.inspiration}`} className="px-2 py-1 bg-primary/20 rounded">{c.inspiration}</Link>
             ))}
           </div>
         </div>
