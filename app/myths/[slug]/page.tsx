@@ -6,6 +6,7 @@ import { My } from "@/types/my";
 import Modal from "@/components/Modal";
 import MyCh from "@/components/MyCh";
 import { MyChar } from "@/types/myChar";
+import Grid from "@/components/Grid";
 
 export default function MythPage() {
 
@@ -92,8 +93,8 @@ export default function MythPage() {
     <>
       <h2 className="mt-16 text-center">{myth?.title}</h2>
       <p className="card font-serif">{myth?.summary}</p>
-       <div className="flex gap-4 justify-center flex-wrap">
-        <button onClick={() => setMythOpen(true)}className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
+      <div className="flex gap-4 justify-center flex-wrap">
+        <button onClick={() => setMythOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
         <button onClick={() => setContributionOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -108,15 +109,15 @@ export default function MythPage() {
         elements={contributionElements}
         handleSubmit={handleContributionSubmit}
         disabled={inspiration.trim() === ""}
-       />
-       <Modal
+      />
+      <Modal
         heading="Edit Myth"
         open={mythOpen}
         setOpen={setMythOpen}
         elements={mythElements}
         handleSubmit={handleMythSubmit}
         disabled={title.trim() === ""}
-       />
+      />
     </>
   );
 }

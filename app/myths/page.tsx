@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Myth from "@/components/Myth";
 import { My } from "@/types/my";
 import Modal from "@/components/Modal";
+import Grid from "@/components/Grid";
 
 export default function Myths() {
 
@@ -42,27 +43,46 @@ export default function Myths() {
   }
 
   return (
-    <>
-      <div className="mt-16 text-center">
-        <h2>The Chronicles</h2>
-        <p className="italic mt-4 font-semibold font-serif">"Legends are but truths that time has forgotten."</p>
-      </div>
-      <div className="text-center">
-        <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Myth</button>
-      </div>
-      <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {myths.map((myth) => (
-          <Myth key={myth.id} data={myth} />
-        ))}
-      </article>
-      <Modal
-        heading="Add New Myth"
-        open={open}
-        setOpen={setOpen}
-        elements={elements}
-        handleSubmit={handleSubmit}
-        disabled={title.trim() === "" || summary.trim() === ""}
-      />
-    </>
+    <Grid
+      title="The Chronicles"
+      quote="Legends are but truths that time has forgotten."
+      button={{ label: "Add Myth", onClick: () => setOpen(true) }}
+      gridStyle="md:grid-cols-2 lg:grid-cols-3"
+      data={myths}
+      dataComponent={Myth}>
+        <Modal
+          heading="Add New Myth"
+          open={open}
+          setOpen={setOpen}
+          elements={elements}
+          handleSubmit={handleSubmit}
+          disabled={title.trim() === "" || summary.trim() === ""}
+        />
+    </Grid>
   );
 }
+
+/*
+<>
+  <div className="mt-16 text-center">
+    <h2>The Chronicles</h2>
+    <p className="italic mt-4 font-semibold font-serif">"Legends are but truths that time has forgotten."</p>
+  </div>
+  <div className="text-center">
+    <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Myth</button>
+  </div>
+  <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {myths.map((myth) => (
+      <Myth key={myth.id} data={myth} />
+    ))}
+  </article>
+  <Modal
+    heading="Add New Myth"
+    open={open}
+    setOpen={setOpen}
+    elements={elements}
+    handleSubmit={handleSubmit}
+    disabled={title.trim() === "" || summary.trim() === ""}
+  />
+</>
+*/

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Character from "@/components/Character";
 import { Char } from "@/types/char";
 import Modal from "@/components/Modal";
+import Grid from "./Grid";
 import { useRouter } from "next/navigation";
 
 export default function Characters() {
@@ -77,19 +78,13 @@ export default function Characters() {
   }
 
   return (
-    <>
-      <div className="mt-16 text-center">
-        <h2>Dramatis Personae</h2>
-        <p className="italic mt-4 font-semibold font-serif">"Heroes are not born; they are forged in the fires of tragedy and triumph."</p>
-      </div>
-      <div className="text-center">
-        <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Character</button>
-      </div>
-      <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {namedCharacters.map(char => (
-          <Character key={char.id} data={char} />
-        ))}
-      </article>
+    <Grid
+      title="Dramatis Personae"
+      quote="Heroes are not born; they are forged in the fires of tragedy and triumph."
+      button={{ label: "Add Character", onClick: () => setOpen(true) }}
+      gridStyle="sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+      data={namedCharacters}
+      dataComponent={Character}>
       <Modal
         heading="Add New Character"
         open={open}
@@ -98,6 +93,31 @@ export default function Characters() {
         handleSubmit={handleSubmit}
         disabled={inspiration.trim() === "" && newInspiration.trim() === ""}
       />
-    </>
+    </Grid>
   );
 }
+
+/*
+<>
+  <div className="mt-16 text-center">
+    <h2>Dramatis Personae</h2>
+    <p className="italic mt-4 font-semibold font-serif">"Heroes are not born; they are forged in the fires of tragedy and triumph."</p>
+  </div>
+  <div className="text-center">
+    <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Character</button>
+  </div>
+  <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {namedCharacters.map(char => (
+      <Character key={char.id} data={char} />
+    ))}
+  </article>
+  <Modal
+    heading="Add New Character"
+    open={open}
+    setOpen={setOpen}
+    elements={elements}
+    handleSubmit={handleSubmit}
+    disabled={inspiration.trim() === "" && newInspiration.trim() === ""}
+  />
+</>
+*/
