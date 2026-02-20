@@ -85,7 +85,7 @@ export default function MythPage() {
       <h2 className="mt-16 text-center">{myth?.title}</h2>
       <p className="card font-serif">{myth?.summary}</p>
        <div className="flex gap-4 justify-center flex-wrap">
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
+        <button onClick={() => setMythOpen(true)}className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
         <button onClick={() => setContributionOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
