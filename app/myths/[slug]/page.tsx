@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { My } from "@/types/my";
-import { Char } from "@/types/char";
 import Modal from "@/components/Modal";
 import MyCh from "@/components/MyCh";
 import { MyChar } from "@/types/myChar";
@@ -11,9 +10,15 @@ import { MyChar } from "@/types/myChar";
 export default function MythPage() {
 
   const { slug } = useParams();
-  const [open, setOpen] = useState(false);
+
+  const [contributionOpen, setContributionOpen] = useState(false);
   const [inspiration, setInspiration] = useState("");
   const [contribution, setContribution] = useState("");
+
+  const [mythOpen, setMythOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+
   const [myth, setMyth] = useState<My>();
   const [mythChars, setMythChars] = useState<MyChar[]>([]);
 
@@ -27,7 +32,28 @@ export default function MythPage() {
     fetchData();
   }, [slug]);
 
-  const elements = {
+  const mythElements = {
+    title: {
+      label: "Title",
+      value: title,
+      setValue: setTitle
+    },
+    summary: {
+      label: "Summary",
+      value: summary,
+      setValue: setSummary
+    }
+  }
+
+  const handleMythSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    await supabase.from("myths").update({ title: title.trim(), summary: summary.trim() }).eq("id", slug);
+    setTitle("");
+    setSummary("");
+    setMythOpen(false);
+  }
+
+  const contributionElements = {
     inspiration: {
       label: "Inspiration",
       value: inspiration,
@@ -40,7 +66,7 @@ export default function MythPage() {
     }
   }
 
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+  const handleContributionSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     let { data: character } = await supabase.from("characters").select("*").eq("inspiration", inspiration).single();
     if (!character) {
@@ -51,15 +77,16 @@ export default function MythPage() {
 
     setInspiration("");
     setContribution("");
-    setOpen(false);
+    setContributionOpen(false);
   }
 
   return (
     <>
       <h2 className="mt-16 text-center">{myth?.title}</h2>
       <p className="card font-serif">{myth?.summary}</p>
-       <div className="text-center">
-        <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
+       <div className="flex gap-4 justify-center flex-wrap">
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
+        <button onClick={() => setContributionOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {mythChars.map((myChar) => 
@@ -68,10 +95,17 @@ export default function MythPage() {
       </article>
       <Modal
         heading="Add New Contribution"
-        open={open}
-        setOpen={setOpen}
-        elements={elements}
-        handleSubmit={handleSubmit}
+        open={contributionOpen}
+        setOpen={setContributionOpen}
+        elements={contributionElements}
+        handleSubmit={handleContributionSubmit}
+       />
+       <Modal
+        heading="Edit Myth"
+        open={mythOpen}
+        setOpen={setMythOpen}
+        elements={mythElements}
+        handleSubmit={handleMythSubmit}
        />
     </>
   );
