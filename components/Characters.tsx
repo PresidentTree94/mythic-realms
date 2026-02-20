@@ -5,9 +5,11 @@ import { supabase } from "@/lib/supabaseClient";
 import Character from "@/components/Character";
 import { Char } from "@/types/char";
 import Modal from "@/components/Modal";
+import { useRouter } from "next/navigation";
 
 export default function Characters() {
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [characters, setCharacters] = useState<Char[]>([]);
@@ -51,11 +53,12 @@ export default function Characters() {
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("characters").upsert({ name: name.trim(), pronunciation: pronunciation.trim(), inspiration: inspiration.trim() });
+    await supabase.from("characters").upsert({ name: name.trim(), pronunciation: pronunciation.trim(), inspiration: inspiration.trim() }, { onConflict: "inspiration" });
     setName("");
     setPronunciation("");
     setInspiration("");
     setOpen(false);
+    router.replace("/characters");
   }
 
   return (

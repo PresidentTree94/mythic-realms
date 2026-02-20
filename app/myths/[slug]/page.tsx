@@ -97,7 +97,7 @@ export default function MythPage() {
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {mythChars.map((myChar) => 
-          <MyCh key={myChar.id} data={myChar} />
+          <MyCh key={myChar.myth_id + "0" + myChar.character_id} data={myChar} />
         )}
       </article>
       <Modal

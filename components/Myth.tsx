@@ -11,7 +11,7 @@ export default function Myth({ data }: { data: My }) {
     const fetchData = async () => {
       const { data: chars } = await supabase.from("myth_chars").select("*").eq("myth_id", data.id);
       const charIds = chars?.map(c => c.character_id) ?? [];
-      const { data: characters } = await supabase.from("characters").select("*").in("id", charIds);
+      const { data: characters } = await supabase.from("characters").select("*").in("id", charIds).order("inspiration", { ascending: true });
       setCharacters(characters ?? []);
     }
     fetchData();
