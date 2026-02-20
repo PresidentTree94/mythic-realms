@@ -18,7 +18,7 @@ export default function MyCh({ data }: { data: MyChar }) {
     <div className="card p-0 overflow-hidden">
       <div className="h-2 w-full bg-gradient-to-r from-primary via-secondary to-primary"></div>
       <div className="p-6">
-        <h3 className="mt-6">{inspiration}</h3>
+        <h3>{inspiration}</h3>
         <p className="font-serif">{data.contribution}</p>
       </div>
     </div>
