@@ -17,7 +17,16 @@ export default function Modal({
           {Object.entries(elements).map(([key, field]) => (
             <React.Fragment key={key}>
               <label>{field.label}:</label>
-              <input type="text" className="bg-background px-2 py-1 border border-border outline-none focus:border-secondary" value={field.value} onChange={(e) => field.setValue(e.target.value)} />
+              {field.options ? (
+                <select className="bg-background px-2 py-1 border border-border outline-none focus:border-secondary appearance-none" value={field.value} onChange={(e) => field.setValue(e.target.value)}>
+                  <option value="">Select Inspiration</option>
+                  {field.options.map((opt: string) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" className="bg-background px-2 py-1 border border-border outline-none focus:border-secondary" value={field.value} onChange={(e) => field.setValue(e.target.value)} />
+              )}
             </React.Fragment>
           ))}
           <div className="col-span-2 grid grid-cols-2 gap-4 mt-6">

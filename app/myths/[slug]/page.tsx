@@ -26,8 +26,9 @@ export default function MythPage() {
     const fetchData = async () => {
       const { data } = await supabase.from("myths").select("*").eq("id", slug).single();
       setMyth(data);
-      const { data: chars } = await supabase.from("myth_chars").select("*").eq("myth_id", slug);
-      setMythChars(chars ?? []);
+      const { data: chars } = await supabase.from("myth_chars").select(`*, characters (id, inspiration)`).eq("myth_id", slug);
+      const sorted = (chars ?? []).sort((a, b) => a.characters.inspiration.localeCompare(b.characters.inspiration) );
+      setMythChars(sorted);
     };
     fetchData();
   }, [slug]);

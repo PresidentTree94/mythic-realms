@@ -16,10 +16,11 @@ export default function Characters() {
   const [name, setName] = useState("");
   const [pronunciation, setPronunciation] = useState("");
   const [inspiration, setInspiration] = useState("");
+  const [newInspiration, setNewInspiration] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase.from("characters").select("*").neq("name", "").order("name", { ascending: true });
+      const { data } = await supabase.from("characters").select("*");
       setCharacters(data ?? []);
     }
     fetchData();
@@ -32,6 +33,9 @@ export default function Characters() {
       setOpen(true);
     }
   }, [searchParams]);
+
+  const namedCharacters = characters.filter(char => char.name !== "").sort((a, b) => a.name.localeCompare(b.name));
+  const unnamedCharacters = characters.filter(char => char.name === "").map(c => c.inspiration).sort((a, b) => a.localeCompare(b));
 
   const elements = {
     name: {
@@ -47,13 +51,23 @@ export default function Characters() {
     inspiration: {
       label: "Inspiration",
       value: inspiration,
-      setValue: setInspiration
+      setValue: setInspiration,
+      options: unnamedCharacters
+    },
+    newInspiration: {
+      label: "New Inspiration",
+      value: newInspiration,
+      setValue: setNewInspiration
     }
   }
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("characters").upsert({ name: name.trim(), pronunciation: pronunciation.trim(), inspiration: inspiration.trim() }, { onConflict: "inspiration" });
+    await supabase.from("characters").upsert({
+      name: name.trim(),
+      pronunciation: pronunciation.trim(),
+      inspiration: inspiration.trim() === "" ? newInspiration.trim() : inspiration.trim()
+    }, { onConflict: "inspiration" });
     setName("");
     setPronunciation("");
     setInspiration("");
@@ -71,7 +85,7 @@ export default function Characters() {
         <button onClick={() => setOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Character</button>
       </div>
       <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {characters.map(char => (
+        {namedCharacters.map(char => (
           <Character key={char.id} data={char} />
         ))}
       </article>
