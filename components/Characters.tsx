@@ -71,6 +71,7 @@ export default function Characters() {
     setName("");
     setPronunciation("");
     setInspiration("");
+    setNewInspiration("");
     setOpen(false);
     router.replace("/characters");
   }
