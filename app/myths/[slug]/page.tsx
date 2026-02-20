@@ -35,8 +35,8 @@ export default function MythPage() {
 
   useEffect(() => {
     if (myth) {
-      setTitle(myth.title ?? "");
-      setSummary(myth.summary ?? "");
+      setTitle(myth.title);
+      setSummary(myth.summary);
     }
   }, [myth]);
 
@@ -107,6 +107,7 @@ export default function MythPage() {
         setOpen={setContributionOpen}
         elements={contributionElements}
         handleSubmit={handleContributionSubmit}
+        disabled={inspiration.trim() === ""}
        />
        <Modal
         heading="Edit Myth"
@@ -114,6 +115,7 @@ export default function MythPage() {
         setOpen={setMythOpen}
         elements={mythElements}
         handleSubmit={handleMythSubmit}
+        disabled={title.trim() === ""}
        />
     </>
   );

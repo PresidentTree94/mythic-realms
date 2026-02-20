@@ -1,13 +1,14 @@
 import React from "react";
 
 export default function Modal({
-  heading, open, setOpen, elements, handleSubmit
+  heading, open, setOpen, elements, handleSubmit, disabled
 }:Readonly<{
   heading: string;
   open: boolean;
   setOpen: (open: boolean) => void;
   elements: Record<string, any>;
   handleSubmit: React.SubmitEventHandler<HTMLFormElement>;
+  disabled: boolean;
 }>) {
   return (
     <div className={`fixed inset-0 bg-black/50 z-3 ${open ? "flex" : "hidden"} justify-center items-center mb-0`}>
@@ -30,7 +31,7 @@ export default function Modal({
             </React.Fragment>
           ))}
           <div className="col-span-2 grid grid-cols-2 gap-4 mt-6">
-            <button type="submit" className="bg-primary text-background px-4 py-2 font-heading font-medium cursor-pointer">Submit</button>
+            <button type="submit" disabled={disabled} className="bg-primary text-background px-4 py-2 font-heading font-medium cursor-pointer">Submit</button>
             <button type="button" onClick={() => setOpen(false)} className="bg-secondary text-background px-4 py-2 font-heading font-medium cursor-pointer">Cancel</button>
           </div>
         </form>

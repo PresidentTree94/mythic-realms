@@ -61,6 +61,7 @@ export default function Myths() {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
+        disabled={title.trim() === "" || summary.trim() === ""}
       />
     </>
   );

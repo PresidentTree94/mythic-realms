@@ -58,6 +58,7 @@ export default function MyCh({ data }: { data: MyChar }) {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
+        disabled={inspiration.trim() === ""}
        />
     </>
   );

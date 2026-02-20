@@ -96,6 +96,7 @@ export default function Characters() {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
+        disabled={inspiration.trim() === "" && newInspiration.trim() === ""}
       />
     </>
   );
