@@ -49,11 +49,6 @@ export default function Kingdoms() {
       value: greek,
       setValue: setGreek
     },
-    medieval: {
-      label: "Medieval",
-      value: medieval,
-      setValue: setMedieval
-    },
     greekFounder: {
       label: "Founder",
       value: greekFounder,
@@ -63,6 +58,11 @@ export default function Kingdoms() {
       label: "Location",
       value: greekLocation,
       setValue: setGreekLocation
+    },
+    medieval: {
+      label: "Medieval",
+      value: medieval,
+      setValue: setMedieval
     },
     medievalFounder: {
       label: "Founder",
