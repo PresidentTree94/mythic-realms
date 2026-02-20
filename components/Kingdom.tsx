@@ -2,8 +2,8 @@ import { King } from "@/types/king";
 
 export default function Kingdom({ data }: { data: King }) {
 
-  const greek = data.counterparts.find(c => c.type === "greek");
-  const medieval = data.counterparts.find(c => c.type === "medieval");
+  const greek = data.counterparts.find(c => c.type === "Greek");
+  const medieval = data.counterparts.find(c => c.type === "Medieval");
 
   return (
     <div className="card space-y-4">
