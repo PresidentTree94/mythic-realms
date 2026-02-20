@@ -32,6 +32,13 @@ export default function MythPage() {
     fetchData();
   }, [slug]);
 
+  useEffect(() => {
+    if (myth) {
+      setTitle(myth.title ?? "");
+      setSummary(myth.summary ?? "");
+    }
+  }, [myth]);
+
   const mythElements = {
     title: {
       label: "Title",
