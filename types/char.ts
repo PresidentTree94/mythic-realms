@@ -3,4 +3,5 @@ export type Char = {
   name: string;
   inspiration: string;
   pronunciation: string;
+  inspiration_markers: string[];
 };

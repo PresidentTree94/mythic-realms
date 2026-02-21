@@ -18,6 +18,7 @@ export default function Characters() {
   const [pronunciation, setPronunciation] = useState("");
   const [inspiration, setInspiration] = useState("");
   const [newInspiration, setNewInspiration] = useState("");
+  const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +32,11 @@ export default function Characters() {
     const inspiration = searchParams.get("inspiration");
     if (inspiration) {
       setInspiration(inspiration);
+      const fetchData = async () => {
+        const { data } = await supabase.from("characters").select("inspiration_markers").eq("inspiration", inspiration).single();
+        setInspirationMarkers(data?.inspiration_markers);
+      };
+      fetchData();
       setOpen(true);
     }
   }, [searchParams]);
@@ -53,12 +59,22 @@ export default function Characters() {
       label: "Inspiration",
       value: inspiration,
       setValue: setInspiration,
-      options: unnamedCharacters
+      options: unnamedCharacters,
+      defaultOption: "Select Inspiration",
+      isMulti: false
     },
     newInspiration: {
       label: "New Inspiration",
       value: newInspiration,
       setValue: setNewInspiration
+    },
+    inspirationMarkers: {
+      label: "Inspiration Markers",
+      value: inspirationMarkers,
+      setValue: setInspirationMarkers,
+      options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
+      defaultOption: "Select Markers",
+      isMulti: true
     }
   }
 
@@ -67,12 +83,14 @@ export default function Characters() {
     await supabase.from("characters").upsert({
       name: name.trim(),
       pronunciation: pronunciation.trim(),
-      inspiration: inspiration.trim() === "" ? newInspiration.trim() : inspiration.trim()
+      inspiration: inspiration.trim() === "" ? newInspiration.trim() : inspiration.trim(),
+      inspiration_markers: inspirationMarkers.filter(marker => marker !== "")
     }, { onConflict: "inspiration" });
     setName("");
     setPronunciation("");
     setInspiration("");
     setNewInspiration("");
+    setInspirationMarkers([]);
     setOpen(false);
     router.replace("/characters");
   }

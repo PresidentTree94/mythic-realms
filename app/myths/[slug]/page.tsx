@@ -6,7 +6,6 @@ import { My } from "@/types/my";
 import Modal from "@/components/Modal";
 import MyCh from "@/components/MyCh";
 import { MyChar } from "@/types/myChar";
-import Grid from "@/components/Grid";
 
 export default function MythPage() {
 
@@ -14,6 +13,7 @@ export default function MythPage() {
 
   const [contributionOpen, setContributionOpen] = useState(false);
   const [inspiration, setInspiration] = useState("");
+  const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
   const [contribution, setContribution] = useState("");
 
   const [mythOpen, setMythOpen] = useState(false);
@@ -68,6 +68,14 @@ export default function MythPage() {
       value: inspiration,
       setValue: setInspiration
     },
+    inspirationMarkers: {
+      label: "Inspiration Markers",
+      value: inspirationMarkers,
+      setValue: setInspirationMarkers,
+      options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
+      defaultOption: "Select Markers",
+      isMulti: true
+    },
     contribution: {
       label: "Contribution",
       value: contribution,
@@ -79,12 +87,13 @@ export default function MythPage() {
     e.preventDefault();
     let { data: character } = await supabase.from("characters").select("*").eq("inspiration", inspiration).single();
     if (!character) {
-      const { data: newChar } = await supabase.from("characters").insert({ inspiration: inspiration.trim() }).select("*").single();
+      const { data: newChar } = await supabase.from("characters").insert({ inspiration: inspiration.trim(), inspiration_markers: inspirationMarkers.filter(marker => marker !== "") }).select("*").single();
       character = newChar;
     }
     await supabase.from("myth_chars").insert({ myth_id: slug, character_id: character.id, contribution: contribution.trim() });
 
     setInspiration("");
+    setInspirationMarkers([]);
     setContribution("");
     setContributionOpen(false);
   }
