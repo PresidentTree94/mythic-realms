@@ -26,7 +26,7 @@ export default function MythPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp( contribution, inspirations (*) )").eq("id", slug).single();
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp( myth_id, contribution, inspirations (*) )").eq("id", slug).single();
       const sorted = myths ? {...myths,
         myth_insp: myths.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
       }: null;

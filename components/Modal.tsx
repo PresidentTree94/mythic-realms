@@ -33,8 +33,9 @@ export default function Modal({
             </React.Fragment>
           ))}
           <div className="col-span-2 grid grid-cols-2 gap-4 mt-6">
-            <button type="submit" disabled={disabled} className={`${disabled ? "bg-secondary" : "bg-primary"} text-background px-4 py-2 font-heading font-medium cursor-pointer`}>Submit</button>
+            <button type="button" className="bg-secondary text-background px-4 py-2 font-heading font-medium cursor-pointer">Delete</button>
             <button type="button" onClick={() => setOpen(false)} className="bg-secondary text-background px-4 py-2 font-heading font-medium cursor-pointer">Cancel</button>
+            <button type="submit" disabled={disabled} className={`${disabled ? "bg-secondary" : "bg-primary"} text-background px-4 py-2 font-heading font-medium cursor-pointer col-span-full`}>Submit</button>
           </div>
         </form>
       </div>

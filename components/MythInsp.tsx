@@ -48,10 +48,10 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
     e.preventDefault();
     await supabase.from("inspirations").update({ name: name.trim(), location: location.trim(), markers: markers }).eq("id", data.inspirations.id);
     await supabase.from("myth_insp").update({ contribution: contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
-    setName(name.trim());
-    setLocation(location.trim());
-    setMarkers(markers);
-    setContribution(contribution.trim());
+    setName("");
+    setLocation("");
+    setMarkers([]);
+    setContribution("");
     setOpen(false);
   }
 
