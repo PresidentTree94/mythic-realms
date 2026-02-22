@@ -24,7 +24,7 @@ export default function Myth({ data }: { data: MythType }) {
         <h3>{data.title}</h3>
         <p className="font-serif mt-2 line-clamp-3">{data.summary}</p>
         <div className="border-t border-border/50 pt-4 mt-4 font-body">
-          <p className="text-xs font-bold uppercase tracking-widest">Key Figures</p>
+          <p className="text-xs font-bold uppercase tracking-widest">Key Figures ({data.myth_insp.length})</p>
           <div className="flex flex-wrap gap-2 text-xs font-medium mt-2">
             {data.myth_insp.map(c => (
               characters.some(i => i.inspiration_id === c.inspirations.id) ? <Link key={c.inspirations.id} href={`/characters`} className="px-2 py-1 bg-secondary/20 rounded">{c.inspirations.name}</Link> : <Link href={`characters?inspiration=${c.inspirations.id}`} key={c.inspirations.id} className="px-2 py-1 bg-primary/20 rounded">{c.inspirations.name}</Link>

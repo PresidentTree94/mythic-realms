@@ -22,6 +22,7 @@ export default function Characters() {
   const [gender, setGender] = useState("");
   const [inspiration, setInspiration] = useState("");
   const [newInspiration, setNewInspiration] = useState("");
+  const [inspirationLocation, setInspirationLocation] = useState("");
   const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function Characters() {
         const { data } = await supabase.from("inspirations").select("*").eq("id", inspirationId).single();
         if (data) {
           setInspiration(data.name);
+          setInspirationLocation(data.location);
           setInspirationMarkers(data.markers);
         }
       }
@@ -78,6 +80,11 @@ export default function Characters() {
       value: newInspiration,
       setValue: setNewInspiration
     },
+    inspirationLocation: {
+      label: "Inspiration Location",
+      value: inspirationLocation,
+      setValue: setInspirationLocation
+    },
     inspirationMarkers: {
       label: "Inspiration Markers",
       value: inspirationMarkers,
@@ -92,6 +99,7 @@ export default function Characters() {
     if (inspiration !== "" || newInspiration !== "") {
       const { data } = await supabase.from("inspirations").upsert({
         name: inspiration ? inspiration : newInspiration.trim(),
+        location: inspirationLocation.trim(),
         markers: inspirationMarkers
       }, { onConflict: "name"}).select().single();
       if (data) {
@@ -110,6 +118,7 @@ export default function Characters() {
     setGender("");
     setInspiration("");
     setNewInspiration("");
+    setInspirationLocation("");
     setInspirationMarkers([]);
     setOpen(false);
     router.replace("/characters");

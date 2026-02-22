@@ -20,6 +20,7 @@ export default function MythPage() {
   const [contributionOpen, setContributionOpen] = useState(false);
   const [name, setName] = useState("");
   const [newName, setNewName] = useState("");
+  const [location, setLocation] = useState("");
   const [markers, setMarkers] = useState<string[]>([]);
   const [contribution, setContribution] = useState("");
 
@@ -77,6 +78,11 @@ export default function MythPage() {
       value: newName,
       setValue: setNewName
     },
+    location: {
+      label: "Location",
+      value: location,
+      setValue: setLocation
+    },
     markers: {
       label: "Markers",
       value: markers,
@@ -93,9 +99,11 @@ export default function MythPage() {
   useEffect(() => {
     if (name) {
       const inspiration = inspirations.find(i => i.name === name);
+      setLocation(inspiration?.location ?? "");
       setMarkers(inspiration?.markers ?? []);
     } else {
       setMarkers([]);
+      setLocation("");
     }
   }, [name, inspirations]);
 
@@ -103,6 +111,7 @@ export default function MythPage() {
     e.preventDefault();
     const { data } = await supabase.from("inspirations").upsert({
       name: name ? name : newName.trim(),
+      location: location.trim(),
       markers: markers
     }, { onConflict: "name" }).select().single();
     if (data) {
@@ -110,6 +119,7 @@ export default function MythPage() {
     }
     setName("");
     setNewName("");
+    setLocation("");
     setMarkers([]);
     setContribution("");
     setContributionOpen(false);

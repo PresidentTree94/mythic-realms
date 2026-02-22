@@ -16,6 +16,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(data.inspirations.name);
+  const [location, setLocation] = useState(data.inspirations.location);
   const [markers, setMarkers] = useState(data.inspirations.markers);
   const [contribution, setContribution] = useState(data.contribution);
 
@@ -24,6 +25,11 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
       label: "Name",
       value: name,
       setValue: setName
+    },
+    location: {
+      label: "Location",
+      value: location,
+      setValue: setLocation
     },
     markers: {
       label: "Markers",
@@ -40,9 +46,10 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("inspirations").update({ name: name.trim(), markers: markers }).eq("id", data.inspirations.id);
+    await supabase.from("inspirations").update({ name: name.trim(), location: location.trim(), markers: markers }).eq("id", data.inspirations.id);
     await supabase.from("myth_insp").update({ contribution: contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
     setName(name.trim());
+    setLocation(location.trim());
     setMarkers(markers);
     setContribution(contribution.trim());
     setOpen(false);
@@ -53,7 +60,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
       <div className="card p-0 overflow-hidden flex flex-col">
         <div className="h-2 w-full bg-gradient-to-r from-primary via-secondary to-primary"></div>
         <div className="p-6 flex flex-col justify-between gap-4 flex-1">
-          <div className="space-y-2">
+          <div>
             <div className="flex justify-between items-center">
               <h3>{data.inspirations.name}</h3>
               <div className="flex gap-1">
@@ -63,6 +70,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
                 })}
               </div>
             </div>
+            <p className="text-xs font-body italic mb-2">{data.inspirations.location}</p>
             <p className="font-serif">{data.contribution}</p>
           </div>
           <button onClick={() => setOpen(true)} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>
