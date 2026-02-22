@@ -82,7 +82,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={true}
+        disabled={name.trim() === ""}
       />
     </>
   );
