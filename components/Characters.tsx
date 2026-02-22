@@ -5,8 +5,14 @@ import Grid from "./Grid";
 import Character from "./Character";
 import Modal from "./Modal";
 import { CharacterType } from "@/types/characterType";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Characters() {
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const inspirationId = searchParams.get("inspiration");
 
   const [open, setOpen] = useState(false);
   const [characters, setCharacters] = useState<CharacterType[]>([]);
@@ -17,6 +23,20 @@ export default function Characters() {
   const [inspiration, setInspiration] = useState("");
   const [newInspiration, setNewInspiration] = useState("");
   const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (inspirationId) {
+      const fetchData = async () => {
+        const { data } = await supabase.from("inspirations").select("*").eq("id", inspirationId).single();
+        if (data) {
+          setInspiration(data.name);
+          setInspirationMarkers(data.markers);
+        }
+      }
+      fetchData();
+      setOpen(true);
+    }
+  }, [inspirationId]);
 
   useEffect(() => {
       const fetchData = async () => {
@@ -92,6 +112,7 @@ export default function Characters() {
     setNewInspiration("");
     setInspirationMarkers([]);
     setOpen(false);
+    router.replace("/characters");
   }
 
   return (

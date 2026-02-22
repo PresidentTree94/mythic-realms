@@ -15,7 +15,7 @@ export default function Myths() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp( inspirations (id, name) )").order("title", { ascending: true });
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp(inspiration_id, inspirations (id, name) )").order("title", { ascending: true });
       const sorted = myths?.map(myth => ({...myth,
         myth_insp: myth.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
       })).sort((a, b) => a.title.localeCompare(b.title));
