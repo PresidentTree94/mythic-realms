@@ -55,6 +55,16 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
     setOpen(false);
   }
 
+  const handleDelete = async () => {
+    await supabase.from("myth_insp").delete().eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
+    const { data: characters } = await supabase.from("fantasy_characters").select("*").eq("inspiration_id", data.inspirations.id);
+    const { data: myths } = await supabase.from("myth_insp").select("*").eq("inspiration_id", data.inspirations.id);
+    if ((characters && characters.length === 0) && (myths && myths.length === 0)) {
+      await supabase.from("inspirations").delete().eq("id", data.inspirations.id);
+    }
+    window.location.reload();
+  }
+
   return (
     <>
       <div className="card p-0 overflow-hidden flex flex-col">
@@ -82,6 +92,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
+        handleDelete={handleDelete}
         disabled={name.trim() === ""}
       />
     </>
