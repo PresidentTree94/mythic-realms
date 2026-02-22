@@ -42,7 +42,7 @@ export default function Characters() {
       const fetchData = async () => {
         const { data: characters } = await supabase.from("fantasy_characters").select("*, inspirations(name)").order("name", { ascending: true });
         setCharacters(characters ?? []);
-        const { data: inspirations } = await supabase.from("inspirations").select("name");
+        const { data: inspirations } = await supabase.from("inspirations").select("name").order("name", { ascending: true });
         setInspirations(inspirations?.map(i => i.name) ?? []);
       }
       fetchData();

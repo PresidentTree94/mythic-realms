@@ -30,7 +30,7 @@ export default function MythPage() {
         myth_insp: myths.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
       }: null;
       setMyth(sorted);
-      const { data: inspirations } = await supabase.from("inspirations").select("*");
+      const { data: inspirations } = await supabase.from("inspirations").select("*").order("name", { ascending: true });
       setInspirations(inspirations ?? []);
     };
     fetchData();
