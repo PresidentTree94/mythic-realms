@@ -1,22 +1,7 @@
-import { My } from "@/types/my";
-import { Char } from "@/types/char";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { MythType } from "@/types/mythType";
 import Link from "next/link";
 
-export default function Myth({ data }: { data: My }) {
-
-  const [characters, setCharacters] = useState<Char[]>([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: chars } = await supabase.from("myth_chars").select("*").eq("myth_id", data.id);
-      const charIds = chars?.map(c => c.character_id) ?? [];
-      const { data: characters } = await supabase.from("characters").select("*").in("id", charIds).order("inspiration", { ascending: true });
-      setCharacters(characters ?? []);
-    }
-    fetchData();
-  }, [data.id]);
-
+export default function Myth({ data }: { data: MythType }) {
   return (
     <Link href={`/myths/${data.id}`} className="card p-0 overflow-hidden">
       <div className="h-2 bg-gradient-to-r from-primary via-secondary to-primary"></div>
@@ -26,8 +11,8 @@ export default function Myth({ data }: { data: My }) {
         <div className="border-t border-border/50 pt-4 mt-4 font-body">
           <p className="text-xs font-bold uppercase tracking-widest">Key Figures</p>
           <div className="flex flex-wrap gap-2 text-xs font-medium mt-2">
-            {characters.map(c => (
-              c.name ? <Link key={c.id} href={`/characters`} className="px-2 py-1 bg-secondary/20 rounded">{c.inspiration}</Link> : <Link key={c.id} href={`/characters?inspiration=${c.inspiration}`} className="px-2 py-1 bg-primary/20 rounded">{c.inspiration}</Link>
+            {data.myth_insp.map(c => (
+              <Link key={c.inspirations.id} href={`/characters`} className="px-2 py-1 bg-secondary/20 rounded">{c.inspirations.name}</Link>
             ))}
           </div>
         </div>

@@ -2,44 +2,39 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
-import { My } from "@/types/my";
+import { MythType } from "@/types/mythType";
+import { InspirationType } from "@/types/inspirationType";
+import MythInsp from "@/components/MythInsp";
 import Modal from "@/components/Modal";
-import MyCh from "@/components/MyCh";
-import { MyChar } from "@/types/myChar";
 
 export default function MythPage() {
 
   const { slug } = useParams();
-
-  const [contributionOpen, setContributionOpen] = useState(false);
-  const [inspiration, setInspiration] = useState("");
-  const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
-  const [contribution, setContribution] = useState("");
+  const [myth, setMyth] = useState<MythType>();
+  const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
   const [mythOpen, setMythOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
 
-  const [myth, setMyth] = useState<My>();
-  const [mythChars, setMythChars] = useState<MyChar[]>([]);
+  const [contributionOpen, setContributionOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [newName, setNewName] = useState("");
+  const [markers, setMarkers] = useState<string[]>([]);
+  const [contribution, setContribution] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase.from("myths").select("*").eq("id", slug).single();
-      setMyth(data);
-      const { data: chars } = await supabase.from("myth_chars").select(`*, characters (id, inspiration)`).eq("myth_id", slug);
-      const sorted = (chars ?? []).sort((a, b) => a.characters.inspiration.localeCompare(b.characters.inspiration) );
-      setMythChars(sorted);
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp( contribution, inspirations (*) )").eq("id", slug).single();
+      const sorted = myths ? {...myths,
+        myth_insp: myths.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
+      }: null;
+      setMyth(sorted);
+      const { data: inspirations } = await supabase.from("inspirations").select("*");
+      setInspirations(inspirations ?? []);
     };
     fetchData();
   }, [slug]);
-
-  useEffect(() => {
-    if (myth) {
-      setTitle(myth.title);
-      setSummary(myth.summary);
-    }
-  }, [myth]);
 
   const mythElements = {
     title: {
@@ -54,6 +49,13 @@ export default function MythPage() {
     }
   }
 
+  useEffect(() => {
+    if (myth) {
+      setTitle(myth.title);
+      setSummary(myth.summary);
+    }
+  }, [myth]);
+
   const handleMythSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("myths").update({ title: title.trim(), summary: summary.trim() }).eq("id", slug);
@@ -63,18 +65,23 @@ export default function MythPage() {
   }
 
   const contributionElements = {
-    inspiration: {
-      label: "Inspiration",
-      value: inspiration,
-      setValue: setInspiration
+    name: {
+      label: "Name",
+      value: name,
+      setValue: setName,
+      options: inspirations.map(i => i.name),
+      defaultOption: "Select Inspiration"
     },
-    inspirationMarkers: {
-      label: "Inspiration Markers",
-      value: inspirationMarkers,
-      setValue: setInspirationMarkers,
+    newName: {
+      label: "New Name",
+      value: newName,
+      setValue: setNewName
+    },
+    markers: {
+      label: "Markers",
+      value: markers,
+      setValue: setMarkers,
       options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
-      defaultOption: "Select Markers",
-      isMulti: true
     },
     contribution: {
       label: "Contribution",
@@ -83,17 +90,27 @@ export default function MythPage() {
     }
   }
 
+  useEffect(() => {
+    if (name) {
+      const inspiration = inspirations.find(i => i.name === name);
+      setMarkers(inspiration?.markers ?? []);
+    } else {
+      setMarkers([]);
+    }
+  }, [name, inspirations]);
+
   const handleContributionSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    let { data: character } = await supabase.from("characters").select("*").eq("inspiration", inspiration).single();
-    if (!character) {
-      const { data: newChar } = await supabase.from("characters").insert({ inspiration: inspiration.trim(), inspiration_markers: inspirationMarkers.filter(marker => marker !== "") }).select("*").single();
-      character = newChar;
+    const { data } = await supabase.from("inspirations").upsert({
+      name: name ? name : newName.trim(),
+      markers: markers
+    }, { onConflict: "name" }).select().single();
+    if (data) {
+      await supabase.from("myth_insp").insert({ myth_id: slug, inspiration_id: data.id, contribution: contribution.trim() });
     }
-    await supabase.from("myth_chars").insert({ myth_id: slug, character_id: character.id, contribution: contribution.trim() });
-
-    setInspiration("");
-    setInspirationMarkers([]);
+    setName("");
+    setNewName("");
+    setMarkers([]);
     setContribution("");
     setContributionOpen(false);
   }
@@ -107,18 +124,10 @@ export default function MythPage() {
         <button onClick={() => setContributionOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {mythChars.map((myChar) => 
-          <MyCh key={myChar.myth_id + "0" + myChar.character_id} data={myChar} />
+        {myth?.myth_insp.map((mythInsp) => 
+          <MythInsp key={mythInsp.inspirations.id} data={mythInsp} />
         )}
       </article>
-      <Modal
-        heading="Add New Contribution"
-        open={contributionOpen}
-        setOpen={setContributionOpen}
-        elements={contributionElements}
-        handleSubmit={handleContributionSubmit}
-        disabled={inspiration.trim() === ""}
-      />
       <Modal
         heading="Edit Myth"
         open={mythOpen}
@@ -126,6 +135,14 @@ export default function MythPage() {
         elements={mythElements}
         handleSubmit={handleMythSubmit}
         disabled={title.trim() === ""}
+      />
+      <Modal
+        heading="Add Contribution"
+        open={contributionOpen}
+        setOpen={setContributionOpen}
+        elements={contributionElements}
+        handleSubmit={handleContributionSubmit}
+        disabled={name.trim() === "" && newName.trim() === ""}
       />
     </>
   );

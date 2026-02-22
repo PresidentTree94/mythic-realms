@@ -1,9 +1,9 @@
 import React from "react";
-import { Char } from "@/types/char";
-import { My } from "@/types/my";
+import { MythType } from "@/types/mythType";
 import { King } from "@/types/king";
+import { CharacterType } from "@/types/characterType";
 
-export default function Grid<T extends Char | My | King>({
+export default function Grid<T extends CharacterType | MythType | King>({
   title, quote, button, gridStyle, data, dataComponent: DataComponent, children
 }:Readonly<{
   title: string,

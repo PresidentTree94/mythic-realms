@@ -1,8 +1,7 @@
-"use client";
-import { useState, useEffect } from "react";
-import { Star, Sparkle, Droplet, Eye, ChessBishop, LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { MyChar } from "../types/myChar";
+import { Star, Sparkle, Droplet, Eye, ChessBishop, LucideIcon } from "lucide-react";
+import { MythType } from "@/types/mythType";
 import Modal from "./Modal";
 
 const MARKERS: Record<string, LucideIcon> = {
@@ -13,52 +12,39 @@ const MARKERS: Record<string, LucideIcon> = {
   "Prophet": ChessBishop
 }
 
-export default function MyCh({ data }: { data: MyChar }) {
+export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const [open, setOpen] = useState(false);
-  const [inspiration, setInspiration] = useState("");
+  const [name, setName] = useState(data.inspirations.name);
+  const [markers, setMarkers] = useState(data.inspirations.markers);
   const [contribution, setContribution] = useState(data.contribution);
-  const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: character } = await supabase.from("characters").select("*").eq("id", data.character_id).single();
-      setInspiration(character?.inspiration ?? "");
-      setInspirationMarkers(character?.inspiration_markers ?? []);
-    }
-    fetchData();
-  }, [data.character_id]);
 
   const elements = {
-    inspiration: {
-      label: "Inspiration",
-      value: inspiration,
-      setValue: setInspiration
+    name: {
+      label: "Name",
+      value: name,
+      setValue: setName
     },
-    inspirationMarkers: {
-      label: "Inspiration Markers",
-      value: inspirationMarkers,
-      setValue: setInspirationMarkers,
-      options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
-      defaultOption: "Select Markers",
-      isMulti: true
+    markers: {
+      label: "Markers",
+      value: markers,
+      setValue: setMarkers,
+      options: Object.keys(MARKERS)
     },
     contribution: {
       label: "Contribution",
       value: contribution,
       setValue: setContribution
     }
-  };
+  }
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("characters").update({
-      inspiration: inspiration.trim(),
-      inspiration_markers: inspirationMarkers.filter(marker => marker !== "")
-    }).eq("id", data.character_id);
-    await supabase.from("myth_chars").update({ contribution: contribution.trim() }).eq("myth_id", data.myth_id).eq("character_id", data.character_id);
-    setInspiration("");
-    setInspirationMarkers([]);
-    setContribution("");
+    await supabase.from("inspirations").update({ name: name.trim(), markers: markers }).eq("id", data.inspirations.id);
+    await supabase.from("myth_insp").update({ contribution: contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
+    setName(name.trim());
+    setMarkers(markers);
+    setContribution(contribution.trim());
     setOpen(false);
   }
 
@@ -69,9 +55,9 @@ export default function MyCh({ data }: { data: MyChar }) {
         <div className="p-6 flex flex-col justify-between gap-4 flex-1">
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <h3>{inspiration}</h3>
+              <h3>{data.inspirations.name}</h3>
               <div className="flex gap-1">
-                {inspirationMarkers.map(marker => {
+                {data.inspirations.markers.map(marker => {
                   const Icon = marker !== "" ? MARKERS[marker] : null;
                   return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
                 })}
@@ -88,8 +74,8 @@ export default function MyCh({ data }: { data: MyChar }) {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={inspiration.trim() === ""}
-       />
+        disabled={true}
+      />
     </>
   );
 }

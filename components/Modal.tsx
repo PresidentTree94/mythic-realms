@@ -20,9 +20,9 @@ export default function Modal({
             <React.Fragment key={key}>
               <label>{field.label}:</label>
               {field.options ? (
-                <select key={field.isMulti ? "multi" : "single"} {...(field.isMulti ? {multiple: true} : {})} className="bg-background px-2 py-1 border border-border outline-none focus:border-secondary appearance-none" value={field.value}
-                onChange={(e) => field.setValue(field.isMulti ? Array.from(e.target.selectedOptions, o => o.value) : e.target.value)}>
-                  <option value="">{field.defaultOption}</option>
+                <select key={field.defaultOption ? "single" : "multi"} {...(field.defaultOption ? {} : {multiple: true})} className="bg-background px-2 py-1 border border-border outline-none focus:border-secondary appearance-none" value={field.value}
+                onChange={(e) => field.setValue(field.defaultOption ? e.target.value : Array.from(e.target.selectedOptions, o => o.value))}>
+                  {field.defaultOption && <option value="">{field.defaultOption}</option>}
                   {field.options.map((opt: string) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
