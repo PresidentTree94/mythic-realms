@@ -11,7 +11,8 @@ import Modal from "@/components/Modal";
 export default function KingdomPage() {
 
   const { slug } = useParams();
-  const [open, setOpen] = useState(false);
+  const [kingdomOpen, setKingdomOpen] = useState(false);
+  const [territoryOpen, setTerritoryOpen] = useState(false);
   const [kingdom, setKingdom] = useState<KingdomType>();
   const [name, setName] = useState("");
   const [crest, setCrest] = useState("");
@@ -66,7 +67,7 @@ export default function KingdomPage() {
     setName("");
     setCrest("");
     setGovernment("");
-    setOpen(false);
+    setKingdomOpen(false);
   }
 
   const territoryElements = {
@@ -91,7 +92,7 @@ export default function KingdomPage() {
     });
     setTerritoryName("");
     setTerritoryCounterpart("");
-    setOpen(false);
+    setTerritoryOpen(false);
   }
 
   return (
@@ -121,16 +122,16 @@ export default function KingdomPage() {
       </section>
       <Modal
         heading="Edit Kingdom"
-        open={open}
-        setOpen={setOpen}
+        open={kingdomOpen}
+        setOpen={setKingdomOpen}
         elements={kingdomElements}
         handleSubmit={handleKingdomSubmit}
         disabled={name.trim() === ""}
       />
       <Modal
         heading="Add Territory"
-        open={open}
-        setOpen={setOpen}
+        open={territoryOpen}
+        setOpen={setTerritoryOpen}
         elements={territoryElements}
         handleSubmit={handleTerritorySubmit}
         disabled={territoryName.trim() === "" || territoryCounterpart.trim() === ""}
