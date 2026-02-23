@@ -36,7 +36,7 @@ export default function Territory({ data }: { data: KingdomType["territories"][0
       <div className="card flex flex-col items-center text-center">
         <MapPin className="h-8 w-auto text-secondary mb-2" />
         <h4>{data.name}</h4>
-        <p className="text-xs">{data.counterpart}</p>
+        <p className="text-xs mb-4">{data.counterpart}</p>
         <button onClick={() => setOpen(true)} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>
       </div>
       <Modal
