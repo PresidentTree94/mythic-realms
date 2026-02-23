@@ -64,7 +64,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
         <div className="p-6 flex flex-col justify-between gap-4 flex-1">
           <div>
             <div className="flex justify-between items-center">
-              <h3>{data.inspirations.name}</h3>
+              <h4>{data.inspirations.name}</h4>
               <div className="flex gap-1">
                 {data.inspirations.markers.map(marker => {
                   const Icon = marker !== "" ? MARKERS[marker] : null;
