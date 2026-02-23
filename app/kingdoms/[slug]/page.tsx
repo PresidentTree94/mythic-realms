@@ -99,8 +99,8 @@ export default function KingdomPage() {
     <>
       <h2 className="mt-16 text-center">{kingdom?.name}</h2>
       <div className="flex justify-center gap-4 flex-wrap">
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpen(true)}>Edit Kingdom</button>
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Territory</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setKingdomOpen(true)}>Edit Kingdom</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setTerritoryOpen(true)}>Add Territory</button>
       </div>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Notable Residents</h3>
