@@ -5,6 +5,8 @@ import Grid from "../Grid";
 import Character from "./Character";
 import Modal from "../Modal";
 import { CharacterType } from "@/types/characterType";
+import { KingdomType } from "@/types/kingdomType";
+import { TerritoryType } from "@/types/territoryType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { MARKERS } from "@/utils/markers";
@@ -17,8 +19,9 @@ export default function Characters() {
 
   const [open, setOpen] = useState(false);
   const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [kingdoms, setKingdoms] = useState<string[]>([]);
-  const [territories, setTerritories] = useState<string[]>([]);
+  const [kingdoms, setKingdoms] = useState<KingdomType[]>([]);
+  const [territories, setTerritories] = useState<TerritoryType[]>([]);
+  const [filteredTerritories, setFilteredTerritories] = useState<TerritoryType[]>([]);
   const [inspirations, setInspirations] = useState<string[]>([]);
 
   const [name, setName] = useState("");
@@ -50,11 +53,22 @@ export default function Characters() {
         setCharacters(characters ?? []);
         const { data: inspirations } = await supabase.from("inspirations").select("name").order("name", { ascending: true });
         setInspirations(inspirations?.map(i => i.name) ?? []);
-        const { data: kingdoms } = await supabase.from("kingdoms").select("name").order("name", { ascending: true });
-        setKingdoms(kingdoms?.map(k => k.name) ?? []);
+        const { data: kingdoms } = await supabase.from("kingdoms").select("*").order("name", { ascending: true });
+        setKingdoms(kingdoms ?? []);
+        const { data: territories } = await supabase.from("territories").select("*").order("name", { ascending: true });
+        setTerritories(territories ?? []);
       }
       fetchData();
   }, []);
+
+  useEffect(() => {
+    if (kingdom) {
+      const filteredTerritories = territories.filter(t => t.kingdom_id === kingdoms.find(k => k.name === kingdom)?.id);
+      setFilteredTerritories(filteredTerritories);
+    } else {
+      setFilteredTerritories([]);
+    }
+  }, [kingdom]);
 
   const elements = {
     name: {
@@ -66,14 +80,14 @@ export default function Characters() {
       label: "Kingdom",
       value: kingdom,
       setValue: setKingdom,
-      options: kingdoms,
+      options: kingdoms.map(k => k.name),
       defaultOption: "Select Kingdom"
     },
     territory: {
       label: "Territory",
       value: territory,
       setValue: setTerritory,
-      options: territories,
+      options: filteredTerritories.map(t => t.name),
       defaultOption: "Select Territory"
     },
     inspiration: {
@@ -104,6 +118,8 @@ export default function Characters() {
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     let inspirationId: number | null = null;
+    let character_id: number | null = null;
+
     if (inspiration !== "" || newInspiration !== "") {
       const { data } = await supabase.from("inspirations").upsert({
         name: inspiration ? inspiration : newInspiration.trim(),
@@ -114,12 +130,24 @@ export default function Characters() {
         inspirationId = data.id;
       }
     }
-    await supabase.from("fantasy_characters").insert({
+
+    const { data: character } = await supabase.from("fantasy_characters").insert({
       name: name.trim(),
       markers: [],
       inspiration_id: inspirationId
+    }).select().single();
+    if (character) {
+      character_id = character.id;
+    }
+
+    await supabase.from("terr_char").insert({
+      kingdom_id: kingdoms.find(k => k.name === kingdom)?.id ?? null,
+      territory_id: territories.find(t => t.name === territory)?.id ?? null,
+      character_id: character_id
     });
     setName("");
+    setKingdom("");
+    setTerritory("");
     setInspiration("");
     setNewInspiration("");
     setInspirationLocation("");
