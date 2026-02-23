@@ -21,7 +21,7 @@ export default function Myth({ data }: { data: MythType }) {
     <Link href={`/myths/${data.id}`} className="card p-0 overflow-hidden">
       <div className="h-2 bg-gradient-to-r from-primary via-secondary to-primary"></div>
       <div className="p-6">
-        <h3>{data.title}</h3>
+        <h4>{data.title}</h4>
         <p className="font-serif mt-2 line-clamp-3">{data.summary}</p>
         <div className="border-t border-border/50 pt-4 mt-4 font-body">
           <p className="text-xs font-bold uppercase tracking-widest">Key Figures ({data.myth_insp.length})</p>

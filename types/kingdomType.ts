@@ -1,4 +1,4 @@
-export type King = {
+export type KingdomType = {
   id: number;
   name: string;
   crest: string;

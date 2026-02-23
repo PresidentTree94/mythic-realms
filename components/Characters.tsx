@@ -7,6 +7,7 @@ import Modal from "./Modal";
 import { CharacterType } from "@/types/characterType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { MARKERS } from "@/utils/markers";
 
 export default function Characters() {
 
@@ -89,7 +90,7 @@ export default function Characters() {
       label: "Inspiration Markers",
       value: inspirationMarkers,
       setValue: setInspirationMarkers,
-      options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
+      options: Object.keys(MARKERS),
     }
   };
 

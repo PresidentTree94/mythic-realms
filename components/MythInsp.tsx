@@ -1,16 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Star, Sparkle, Droplet, Eye, ChessBishop, LucideIcon } from "lucide-react";
 import { MythType } from "@/types/mythType";
 import Modal from "./Modal";
-
-const MARKERS: Record<string, LucideIcon> = {
-  "Deity": Star,
-  "Demigod": Sparkle,
-  "Nymph": Droplet,
-  "Seer": Eye,
-  "Prophet": ChessBishop
-}
+import { MARKERS } from "@/utils/markers";
 
 export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 

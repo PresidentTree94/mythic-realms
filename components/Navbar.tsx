@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, Swords, ScrollText, BookMarked } from "lucide-react";
+import { Landmark, Swords, ScrollText, Sparkles } from "lucide-react";
 
 export default function Navbar() {
 
@@ -11,7 +11,7 @@ export default function Navbar() {
     {label: "Kingdoms", link: "/kingdoms", icon: Landmark},
     {label: "Characters", link: "/characters", icon: Swords},
     {label: "Myths", link: "/myths", icon: ScrollText},
-    {label: "Pantheon", link: "/pantheon", icon: BookMarked},
+    {label: "Pantheon", link: "/pantheon", icon: Sparkles},
   ];
 
   return (
@@ -19,7 +19,7 @@ export default function Navbar() {
       <Link href="/" className="font-heading font-bold text-xl tracking-wider text-primary uppercase flex items-center justify-center sm:justify-start"><span className="sm:hidden">MR</span><span className="hidden sm:inline">Mythic Realms</span></Link>
       <nav className="text-sm font-body font-medium grid grid-cols-4 sm:grid-cols-[repeat(4,auto)] sm:gap-6">
         {links.map((l, index) =>
-          <Link key={index} href={l.link} className={`flex items-center justify-center gap-2 hover:text-primary transition-colors ${pathname === l.link && "text-primary"}`}>{l.icon && <l.icon className="sm:hidden h-5 w-auto" />}<span className="hidden sm:inline">{l.label}</span></Link>
+          <Link key={index} href={l.link} className={`flex items-center justify-center gap-2 hover:text-primary transition-colors ${pathname.startsWith(l.link) && "text-primary"}`}>{l.icon && <l.icon className="sm:hidden h-5 w-auto" />}<span className="hidden sm:inline">{l.label}</span></Link>
         )}
       </nav>
     </header>
