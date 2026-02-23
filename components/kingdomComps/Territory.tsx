@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MapPin } from "lucide-react";
-import { KingdomType } from "@/types/kingdomType";
-import Modal from "./Modal";
+import { TerritoryType } from "@/types/territoryType";
+import Modal from "../Modal";
 
-export default function Territory({ data }: { data: KingdomType["territories"][0] }) {
+export default function Territory({ data }: { data: TerritoryType }) {
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");

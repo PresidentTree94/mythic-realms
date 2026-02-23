@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Kingdom from "@/components/Kingdom";
+import Kingdom from "@/components/kingdomComps/Kingdom";
 import { KingdomType } from "@/types/kingdomType";
 import Grid from "@/components/Grid";
 import Modal from "@/components/Modal";

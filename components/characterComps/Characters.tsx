@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Grid from "./Grid";
+import Grid from "../Grid";
 import Character from "./Character";
-import Modal from "./Modal";
+import Modal from "../Modal";
 import { CharacterType } from "@/types/characterType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -17,10 +17,13 @@ export default function Characters() {
 
   const [open, setOpen] = useState(false);
   const [characters, setCharacters] = useState<CharacterType[]>([]);
+  const [kingdoms, setKingdoms] = useState<string[]>([]);
+  const [territories, setTerritories] = useState<string[]>([]);
   const [inspirations, setInspirations] = useState<string[]>([]);
+
   const [name, setName] = useState("");
-  const [pronunciation, setPronunciation] = useState("");
-  const [gender, setGender] = useState("");
+  const [kingdom, setKingdom] = useState("");
+  const [territory, setTerritory] = useState("");
   const [inspiration, setInspiration] = useState("");
   const [newInspiration, setNewInspiration] = useState("");
   const [inspirationLocation, setInspirationLocation] = useState("");
@@ -47,6 +50,8 @@ export default function Characters() {
         setCharacters(characters ?? []);
         const { data: inspirations } = await supabase.from("inspirations").select("name").order("name", { ascending: true });
         setInspirations(inspirations?.map(i => i.name) ?? []);
+        const { data: kingdoms } = await supabase.from("kingdoms").select("name").order("name", { ascending: true });
+        setKingdoms(kingdoms?.map(k => k.name) ?? []);
       }
       fetchData();
   }, []);
@@ -57,17 +62,19 @@ export default function Characters() {
       value: name,
       setValue: setName
     },
-    pronunciation: {
-      label: "Pronunciation",
-      value: pronunciation,
-      setValue: setPronunciation
+    kingdom: {
+      label: "Kingdom",
+      value: kingdom,
+      setValue: setKingdom,
+      options: kingdoms,
+      defaultOption: "Select Kingdom"
     },
-    gender: {
-      label: "Gender",
-      value: gender,
-      setValue: setGender,
-      options: ["Male", "Female"],
-      defaultOption: "Select Gender"
+    territory: {
+      label: "Territory",
+      value: territory,
+      setValue: setTerritory,
+      options: territories,
+      defaultOption: "Select Territory"
     },
     inspiration: {
       label: "Inspiration",
@@ -109,14 +116,10 @@ export default function Characters() {
     }
     await supabase.from("fantasy_characters").insert({
       name: name.trim(),
-      pronunciation: pronunciation.trim(),
-      gender: gender,
       markers: [],
       inspiration_id: inspirationId
     });
     setName("");
-    setPronunciation("");
-    setGender("");
     setInspiration("");
     setNewInspiration("");
     setInspirationLocation("");
@@ -139,7 +142,7 @@ export default function Characters() {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={name.trim() === "" || gender === ""}
+        disabled={name.trim() === ""}
       />
     </Grid>
   );

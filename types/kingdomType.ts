@@ -15,10 +15,4 @@ export type KingdomType = {
     religion: string;
     kingdom_id: number;
   }[];
-  territories: {
-    id: number;
-    name: string;
-    counterpart: string;
-    kingdom_id: number;
-  }[];
 }

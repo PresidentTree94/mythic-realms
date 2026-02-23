@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MythType } from "@/types/mythType";
-import Modal from "./Modal";
+import Modal from "../Modal";
 import { MARKERS } from "@/utils/markers";
 
 export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {

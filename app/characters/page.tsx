@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Characters from "@/components/Characters";
+import Characters from "@/components/characterComps/Characters";
 
 export default function Page() {
   return (

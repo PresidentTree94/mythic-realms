@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { MythType } from "@/types/mythType";
 import { InspirationType } from "@/types/inspirationType";
-import MythInsp from "@/components/MythInsp";
+import MythInsp from "@/components/mythComps/MythInsp";
 import Modal from "@/components/Modal";
 
 export default function MythPage() {

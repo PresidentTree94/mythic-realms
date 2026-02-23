@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { KingdomType } from "@/types/kingdomType";
+import { TerritoryType } from "@/types/territoryType";
 import { Users, MapPinned, Map } from "lucide-react";
-import Territory from "@/components/Territory";
-import Counterpart from "@/components/Counterpart";
+import Territory from "@/components/kingdomComps/Territory";
+import Counterpart from "@/components/kingdomComps/Counterpart";
 import Modal from "@/components/Modal";
 
 export default function KingdomPage() {
@@ -14,6 +15,7 @@ export default function KingdomPage() {
   const [kingdomOpen, setKingdomOpen] = useState(false);
   const [territoryOpen, setTerritoryOpen] = useState(false);
   const [kingdom, setKingdom] = useState<KingdomType>();
+  const [territories, setTerritories] = useState<TerritoryType[]>([]);
   const [name, setName] = useState("");
   const [crest, setCrest] = useState("");
   const [government, setGovernment] = useState("");
@@ -22,8 +24,10 @@ export default function KingdomPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase.from("kingdoms").select(`*, counterparts(*), territories(*)`).eq("id", slug).single();
-      setKingdom(data);
+      const { data: kingdom } = await supabase.from("kingdoms").select(`*, counterparts(*)`).eq("id", slug).single();
+      setKingdom(kingdom);
+      const { data: territories } = await supabase.from("territories").select("*").eq("kingdom_id", slug).order("name", { ascending: true });
+      setTerritories(territories ?? []);
     }
     fetchData();
   }, [slug]);
@@ -108,7 +112,7 @@ export default function KingdomPage() {
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><MapPinned className="h-8 w-auto" />Key Locations</h3>
         <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-8">
-          {kingdom?.territories.map(territory => (
+          {territories.map(territory => (
             <Territory key={territory.id} data={territory} />
           ))}
         </article>

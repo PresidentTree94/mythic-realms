@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { KingdomType } from "@/types/kingdomType";
-import Modal from "./Modal";
+import Modal from "../Modal";
 
 export default function Counterpart({ data }: { data: KingdomType["counterparts"][0] }) {
 

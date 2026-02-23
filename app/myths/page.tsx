@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Myth from "@/components/Myth";
+import Myth from "@/components/mythComps/Myth";
 import { MythType } from "@/types/mythType";
 import Modal from "@/components/Modal";
 import Grid from "@/components/Grid";
