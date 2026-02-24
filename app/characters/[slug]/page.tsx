@@ -160,7 +160,7 @@ export default function CharacterPage() {
           {categories.map(category => (
             <React.Fragment key={category.label}>
               <span className="font-semibold font-serif">{category.label}</span>
-              <span>{category.value}</span>
+              <span className="flex justify-center @sm:justify-start">{category.value}</span>
             </React.Fragment>
           ))}
         </article>
