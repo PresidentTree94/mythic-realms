@@ -23,6 +23,7 @@ export default function CharacterPage() {
   const [gender, setGender] = useState<string>("");
   const [markers, setMarkers] = useState<string[]>([]);
   const [homeland, setHomeland] = useState<string>();
+  const [status, setStatus] = useState<string>("");
   const [father, setFather] = useState<string>("");
   const [mother, setMother] = useState<string>("");
 
@@ -69,6 +70,13 @@ export default function CharacterPage() {
       options: territories.map(t => t.name),
       defaultOption: "Select Homeland"
     },
+    status: {
+      label: "Status",
+      value: status,
+      setValue: setStatus,
+      options: gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
+      defaultOption: "Select Status"
+    },
     father: {
       label: "Father",
       value: father,
@@ -87,6 +95,7 @@ export default function CharacterPage() {
       name: name.trim(),
       pronunciation: pronunciation.trim(),
       gender: gender.trim(),
+      status: status,
       markers: markers,
       territory_id: territories.find(t => t.name === homeland)?.id,
       father: father.trim(),
@@ -95,6 +104,7 @@ export default function CharacterPage() {
     setName("");
     setPronunciation("");
     setGender("");
+    setStatus("");
     setMarkers([]);
     setHomeland("");
     setFather("");
@@ -107,6 +117,7 @@ export default function CharacterPage() {
       setName(character.name);
       setPronunciation(character.pronunciation);
       setGender(character.gender);
+      setStatus(character.status);
       setMarkers(character.markers);
       setHomeland(territories.find(t => t.id === character.territory_id)?.name);
       setFather(character.father);
@@ -114,7 +125,7 @@ export default function CharacterPage() {
     }
   }, [character, territories]);
 
-  const categories = [
+  const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
     {label: "Meaning", value: ""},
     {label: "Gender", value: character?.gender},
@@ -123,8 +134,10 @@ export default function CharacterPage() {
       return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
     })},
     {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name ?? ""}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name ?? ""}`},
-    {label: "Occupation", value: ""}
+    {label: "Status", value: character?.status}
   ];
+
+  const inspirationCategories = [];
 
   const relativeList: {id: number, name: string, relation: string}[] = [];
   relatives.forEach(relative => {
@@ -157,7 +170,7 @@ export default function CharacterPage() {
       <section className="@container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Book className="h-8 w-auto" />Legend</h3>
         <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] gap-4 text-center @sm:text-left font-body mt-8">
-          {categories.map(category => (
+          {characterCategories.map(category => (
             <React.Fragment key={category.label}>
               <span className="font-semibold font-serif">{category.label}</span>
               <span className="flex justify-center @sm:justify-start">{category.value}</span>
@@ -175,6 +188,7 @@ export default function CharacterPage() {
       </section>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
+        <article className="card mt-8"></article>
       </section>
       <Modal
         heading="Edit Character"

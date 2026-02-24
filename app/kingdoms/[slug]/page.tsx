@@ -115,7 +115,7 @@ export default function KingdomPage() {
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Notable Residents</h3>
         <article className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
           {characters.map(character => (
-            <Relation key={character.id} data={{id: character.id, name: character.name, relation: "Resident"}} />
+            <Relation key={character.id} data={{id: character.id, name: character.name, relation: character.status}} />
           ))}
         </article>
       </section>

@@ -6,6 +6,7 @@ export type CharacterType = {
   pronunciation: string;
   gender: string;
   markers: string[];
+  status: string;
   father: string;
   mother: string;
   territory_id: number;
