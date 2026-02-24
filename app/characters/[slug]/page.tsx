@@ -99,22 +99,22 @@ export default function CharacterPage() {
     {label: "Parents", value: `${character?.father}${character?.father && character?.mother ? " & " : ""}${character?.mother}`}
   ];
 
-  const relativeList: {name: string, relation: string}[] = [];
+  const relativeList: {id: number, name: string, relation: string}[] = [];
   relatives.forEach(relative => {
     if (relative.name.includes(father) && father !== "") {
-      relativeList.push({name: relative.name, relation: "Father"});
+      relativeList.push({id: relative.id, name: relative.name, relation: "Father"});
     }
     if (relative.name.includes(mother) && mother !== "") {
-      relativeList.push({name: relative.name, relation: "Mother"});
+      relativeList.push({id: relative.id, name: relative.name, relation: "Mother"});
     }
     if (relative.father === father && relative.mother === mother && father !== "" && mother !== "") {
-      relativeList.push({name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
+      relativeList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
     }
     if ((name.includes(relative.father) || name.includes(relative.mother)) && (relative.father !== "" || relative.mother !== "")) {
       if (relative.gender === "Male") {
-        relativeList.push({name: relative.name, relation: "Son"});
+        relativeList.push({id: relative.id, name: relative.name, relation: "Son"});
       } else if (relative.gender === "Female") {
-        relativeList.push({name: relative.name, relation: "Daughter"});
+        relativeList.push({id: relative.id, name: relative.name, relation: "Daughter"});
       }
     }
   });
