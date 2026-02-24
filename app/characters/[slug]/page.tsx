@@ -101,16 +101,16 @@ export default function CharacterPage() {
 
   const relativeList: {id: number, name: string, relation: string}[] = [];
   relatives.forEach(relative => {
-    if (relative.name.includes(father) && father !== "") {
+    if (relative.name === father && father !== "") {
       relativeList.push({id: relative.id, name: relative.name, relation: "Father"});
     }
-    if (relative.name.includes(mother) && mother !== "") {
+    if (relative.name === mother && mother !== "") {
       relativeList.push({id: relative.id, name: relative.name, relation: "Mother"});
     }
     if (relative.father === father && relative.mother === mother && father !== "" && mother !== "") {
       relativeList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
     }
-    if ((name.includes(relative.father) || name.includes(relative.mother)) && (relative.father !== "" || relative.mother !== "")) {
+    if ((relative.father === name || relative.mother === name) && (relative.father !== "" || relative.mother !== "")) {
       if (relative.gender === "Male") {
         relativeList.push({id: relative.id, name: relative.name, relation: "Son"});
       } else if (relative.gender === "Female") {
