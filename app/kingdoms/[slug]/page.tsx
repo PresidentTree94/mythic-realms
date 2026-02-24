@@ -4,10 +4,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { KingdomType } from "@/types/kingdomType";
 import { TerritoryType } from "@/types/territoryType";
+import { CharacterType } from "@/types/characterType";
 import { Users, MapPinned, Map } from "lucide-react";
 import Territory from "@/components/kingdomComps/Territory";
 import Counterpart from "@/components/kingdomComps/Counterpart";
 import Modal from "@/components/Modal";
+import Relation from "@/components/characterComps/Relation";
 
 export default function KingdomPage() {
 
@@ -16,6 +18,7 @@ export default function KingdomPage() {
   const [territoryOpen, setTerritoryOpen] = useState(false);
   const [kingdom, setKingdom] = useState<KingdomType>();
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
+  const [characters, setCharacters] = useState<CharacterType[]>([]);
   const [name, setName] = useState("");
   const [crest, setCrest] = useState("");
   const [government, setGovernment] = useState("");
@@ -28,6 +31,8 @@ export default function KingdomPage() {
       setKingdom(kingdom);
       const { data: territories } = await supabase.from("territories").select("*").eq("kingdom_id", slug).order("name", { ascending: true });
       setTerritories(territories ?? []);
+      const { data: characters } = await supabase.from("fantasy_characters").select("*").in("territory_id", territories?.map(t => t.id) ?? []).order("name", { ascending: true });
+      setCharacters(characters ?? []);
     }
     fetchData();
   }, [slug]);
@@ -108,6 +113,11 @@ export default function KingdomPage() {
       </div>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Notable Residents</h3>
+        <article className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
+          {characters.map(character => (
+            <Relation key={character.id} data={{id: character.id, name: character.name, relation: "Resident"}} />
+          ))}
+        </article>
       </section>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><MapPinned className="h-8 w-auto" />Key Locations</h3>
