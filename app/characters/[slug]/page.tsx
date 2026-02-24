@@ -122,7 +122,7 @@ export default function CharacterPage() {
       const Icon = PANTHEON_MARKERS[marker];
       return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
     })},
-    {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name}`},
+    {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name ?? ""}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name ?? ""}`},
     {label: "Occupation", value: ""}
   ];
 
