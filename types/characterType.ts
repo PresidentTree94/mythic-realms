@@ -6,6 +6,8 @@ export type CharacterType = {
   pronunciation: string;
   gender: string;
   markers: string[];
+  father: string;
+  mother: string;
   inspiration_id: number;
   inspirations: InspirationType;
 }
