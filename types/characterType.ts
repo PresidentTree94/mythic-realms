@@ -8,6 +8,7 @@ export type CharacterType = {
   markers: string[];
   father: string;
   mother: string;
+  territory_id: number;
   inspiration_id: number;
   inspirations: InspirationType;
 }

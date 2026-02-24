@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MythType } from "@/types/mythType";
 import Modal from "../Modal";
-import { MARKERS } from "@/utils/markers";
+import { INSPIRATION_MARKERS } from "@/utils/markers";
 
 export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
@@ -27,7 +27,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
       label: "Markers",
       value: markers,
       setValue: setMarkers,
-      options: Object.keys(MARKERS)
+      options: Object.keys(INSPIRATION_MARKERS)
     },
     contribution: {
       label: "Contribution",
@@ -67,7 +67,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
               <h4>{data.inspirations.name}</h4>
               <div className="flex gap-1">
                 {data.inspirations.markers.map(marker => {
-                  const Icon = marker !== "" ? MARKERS[marker] : null;
+                  const Icon = INSPIRATION_MARKERS[marker];
                   return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
                 })}
               </div>

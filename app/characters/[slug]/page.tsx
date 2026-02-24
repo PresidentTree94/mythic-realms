@@ -3,15 +3,18 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
+import { TerritoryType } from "@/types/territoryType";
 import { Book, Users, ScrollText } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
 import Modal from "@/components/Modal";
+import { PANTHEON_MARKERS } from "@/utils/markers";
 
 export default function CharacterPage() {
 
   const { slug } = useParams();
   const [open, setOpen] = useState(false);
   const [relatives, setRelatives] = useState<CharacterType[]>([]);
+  const [territories, setTerritories] = useState<TerritoryType[]>([]);
 
   const [character, setCharacter] = useState<CharacterType>();
   const [name, setName] = useState<string>("");
@@ -19,16 +22,18 @@ export default function CharacterPage() {
   const [meaning, setMeaning] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [markers, setMarkers] = useState<string[]>([]);
-  const [homeland, setHomeland] = useState<string>("");
+  const [homeland, setHomeland] = useState<string>();
   const [father, setFather] = useState<string>("");
   const [mother, setMother] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: character } = await supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single();
+      const { data: character } = await supabase.from("fantasy_characters").select("*").eq("id", slug).single();
       setCharacter(character);
       const { data: relatives } = await supabase.from("fantasy_characters").select("*").neq("id", slug);
       setRelatives(relatives ?? []);
+      const { data: territories } = await supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true });
+      setTerritories(territories ?? []);
     }
     fetchData();
   }, [slug]);
@@ -51,6 +56,19 @@ export default function CharacterPage() {
       options: ["Male", "Female"],
       defaultOption: "Select Gender"
     },
+    markers: {
+      label: "Markers",
+      value: markers,
+      setValue: setMarkers,
+      options: Object.keys(PANTHEON_MARKERS)
+    },
+    homeland: {
+      label: "Homeland",
+      value: homeland,
+      setValue: setHomeland,
+      options: territories.map(t => t.name),
+      defaultOption: "Select Homeland"
+    },
     father: {
       label: "Father",
       value: father,
@@ -69,34 +87,43 @@ export default function CharacterPage() {
       name: name.trim(),
       pronunciation: pronunciation.trim(),
       gender: gender.trim(),
+      markers: markers,
+      territory_id: territories.find(t => t.name === homeland)?.id,
       father: father.trim(),
       mother: mother.trim()
     }).eq("id", slug);
     setName("");
     setPronunciation("");
     setGender("");
+    setMarkers([]);
+    setHomeland("");
     setFather("");
     setMother("");
     setOpen(false);
   }
 
   useEffect(() => {
-    if (character) {
+    if (character && territories.length > 0) {
       setName(character.name);
       setPronunciation(character.pronunciation);
       setGender(character.gender);
+      setMarkers(character.markers);
+      setHomeland(territories.find(t => t.id === character.territory_id)?.name);
       setFather(character.father);
       setMother(character.mother);
     }
-  }, [character]);
+  }, [character, territories]);
 
   const categories = [
     {label: "Pronunciation", value: character?.pronunciation},
     {label: "Meaning", value: ""},
     {label: "Gender", value: character?.gender},
-    {label: "Markers", value: character?.markers.join(", ")},
-    {label: "Homeland", value: ""},
-    {label: "Parents", value: `${character?.father}${character?.father && character?.mother ? " & " : ""}${character?.mother}`}
+    {label: "Markers", value: character?.markers.map(marker => {
+      const Icon = PANTHEON_MARKERS[marker];
+      return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
+    })},
+    {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name}`},
+    {label: "Occupation", value: ""}
   ];
 
   const relativeList: {id: number, name: string, relation: string}[] = [];

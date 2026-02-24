@@ -1,15 +1,13 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Grid from "../Grid";
 import Character from "./Character";
 import Modal from "../Modal";
 import { CharacterType } from "@/types/characterType";
-import { KingdomType } from "@/types/kingdomType";
-import { TerritoryType } from "@/types/territoryType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { MARKERS } from "@/utils/markers";
+import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 
 export default function Characters() {
 
@@ -19,14 +17,10 @@ export default function Characters() {
 
   const [open, setOpen] = useState(false);
   const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [kingdoms, setKingdoms] = useState<KingdomType[]>([]);
-  const [territories, setTerritories] = useState<TerritoryType[]>([]);
-  const [filteredTerritories, setFilteredTerritories] = useState<TerritoryType[]>([]);
   const [inspirations, setInspirations] = useState<string[]>([]);
 
   const [name, setName] = useState("");
-  const [kingdom, setKingdom] = useState("");
-  const [territory, setTerritory] = useState("");
+  const [markers, setMarkers] = useState<string[]>([]);
   const [inspiration, setInspiration] = useState("");
   const [newInspiration, setNewInspiration] = useState("");
   const [inspirationLocation, setInspirationLocation] = useState("");
@@ -53,22 +47,9 @@ export default function Characters() {
         setCharacters(characters ?? []);
         const { data: inspirations } = await supabase.from("inspirations").select("name").order("name", { ascending: true });
         setInspirations(inspirations?.map(i => i.name) ?? []);
-        const { data: kingdoms } = await supabase.from("kingdoms").select("*").order("name", { ascending: true });
-        setKingdoms(kingdoms ?? []);
-        const { data: territories } = await supabase.from("territories").select("*").order("name", { ascending: true });
-        setTerritories(territories ?? []);
       }
       fetchData();
   }, []);
-
-  useEffect(() => {
-    if (kingdom) {
-      const filteredTerritories = territories.filter(t => t.kingdom_id === kingdoms.find(k => k.name === kingdom)?.id);
-      setFilteredTerritories(filteredTerritories);
-    } else {
-      setFilteredTerritories([]);
-    }
-  }, [kingdom]);
 
   const elements = {
     name: {
@@ -76,19 +57,11 @@ export default function Characters() {
       value: name,
       setValue: setName
     },
-    kingdom: {
-      label: "Kingdom",
-      value: kingdom,
-      setValue: setKingdom,
-      options: kingdoms.map(k => k.name),
-      defaultOption: "Select Kingdom"
-    },
-    territory: {
-      label: "Territory",
-      value: territory,
-      setValue: setTerritory,
-      options: filteredTerritories.map(t => t.name),
-      defaultOption: "Select Territory"
+    markers: {
+      label: "Markers",
+      value: markers,
+      setValue: setMarkers,
+      options: Object.keys(PANTHEON_MARKERS),
     },
     inspiration: {
       label: "Inspiration",
@@ -111,14 +84,13 @@ export default function Characters() {
       label: "Inspiration Markers",
       value: inspirationMarkers,
       setValue: setInspirationMarkers,
-      options: Object.keys(MARKERS),
+      options: Object.keys(INSPIRATION_MARKERS),
     }
   };
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     let inspirationId: number | null = null;
-    let character_id: number | null = null;
 
     if (inspiration !== "" || newInspiration !== "") {
       const { data } = await supabase.from("inspirations").upsert({
@@ -131,23 +103,13 @@ export default function Characters() {
       }
     }
 
-    const { data: character } = await supabase.from("fantasy_characters").insert({
+    await supabase.from("fantasy_characters").insert({
       name: name.trim(),
-      markers: [],
+      markers: markers,
       inspiration_id: inspirationId
-    }).select().single();
-    if (character) {
-      character_id = character.id;
-    }
-
-    await supabase.from("terr_char").insert({
-      kingdom_id: kingdoms.find(k => k.name === kingdom)?.id ?? null,
-      territory_id: territories.find(t => t.name === territory)?.id ?? null,
-      character_id: character_id
-    });
+    })
     setName("");
-    setKingdom("");
-    setTerritory("");
+    setMarkers([]);
     setInspiration("");
     setNewInspiration("");
     setInspirationLocation("");

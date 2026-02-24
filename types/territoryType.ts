@@ -3,4 +3,8 @@ export type TerritoryType = {
   name: string;
   counterpart: string;
   kingdom_id: number;
+  kingdoms: {
+    id: number;
+    name: string;
+  };
 }
