@@ -110,7 +110,7 @@ export default function CharacterPage() {
     if ((relative.father === father && father !== "") || (relative.mother === mother && mother !== "")) {
       relativeList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
     }
-    if ((relative.father === name || relative.mother === name) && (relative.father !== "" || relative.mother !== "")) {
+    if ((relative.father === name && relative.father !== "") || (relative.mother === name && relative.mother !== "")) {
       if (relative.gender === "Male") {
         relativeList.push({id: relative.id, name: relative.name, relation: "Son"});
       } else if (relative.gender === "Female") {
