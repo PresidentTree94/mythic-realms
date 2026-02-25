@@ -164,7 +164,8 @@ export default function CharacterPage() {
   relationList.push(...relationships.map(relation => {
     const relativeId = relation.first_character === character?.id ? relation.second_character : relation.first_character;
     const relative = characters.find(c => c.id === relativeId);
-    return {id: relativeId, name: relative?.name ?? "", relation: relation.type};
+    const marriage = relation.type === "Spouse" ? relative?.gender === "Male" ? "Husband" : "Wife" : relation.type;
+    return {id: relativeId, name: relative?.name ?? "", relation: marriage};
   }));
   relationList.sort((a, b) => a.name.localeCompare(b.name));
 
