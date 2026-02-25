@@ -45,22 +45,20 @@ export default function CharacterPage() {
   useEffect(() => {
     const fetchData = async () => {
       const [
-        { data: char },
         { data: characters },
         { data: relatives },
         { data: territories },
         { data: myths },
         { data: relationships }
       ] = await Promise.all([
-        supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single(),
         supabase.from("fantasy_characters").select("*, inspirations(*)").order("name", { ascending: true }),
         supabase.from("fantasy_characters").select("*").neq("id", slug),
         supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true }),
         supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id),
         supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`)
       ]);
-      setCharacter(char);
       setCharacters(characters ?? []);
+      setCharacter(characters?.find(c => c.id === Number(slug)) ?? undefined);
       setRelatives(relatives ?? []);
       setTerritories(territories ?? []);
       setMyths(myths ?? []);
@@ -162,7 +160,7 @@ export default function CharacterPage() {
       if ((relative.father === characterForm.father && characterForm.father) || (relative.mother === characterForm.mother && characterForm.mother)) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
       }
-      if ((relative.father === characterForm.name && characterForm.father) || (relative.mother === characterForm.name && characterForm.mother)) {
+      if (relative.father === characterForm.name || relative.mother === characterForm.name) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male" ? "Son" : "Daughter"});
       }
     });
