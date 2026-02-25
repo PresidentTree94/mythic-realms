@@ -5,6 +5,7 @@ import Grid from "../Grid";
 import Character from "./Character";
 import Modal from "../Modal";
 import { CharacterType } from "@/types/characterType";
+import { InspirationType } from "@/types/inspirationType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
@@ -14,106 +15,107 @@ export default function Characters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inspirationId = searchParams.get("inspiration");
-
   const [open, setOpen] = useState(false);
+
   const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [inspirations, setInspirations] = useState<string[]>([]);
+  const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
-  const [name, setName] = useState("");
-  const [markers, setMarkers] = useState<string[]>([]);
-  const [inspiration, setInspiration] = useState("");
-  const [newInspiration, setNewInspiration] = useState("");
-  const [inspirationLocation, setInspirationLocation] = useState("");
-  const [inspirationMarkers, setInspirationMarkers] = useState<string[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    markers: [] as string[],
+    inspiration: "",
+    newInspiration: "",
+    inspirationLocation: "",
+    inspirationMarkers: [] as string[]
+  });
+  const updateForm = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
   useEffect(() => {
-    if (inspirationId) {
-      const fetchData = async () => {
-        const { data } = await supabase.from("inspirations").select("*").eq("id", inspirationId).single();
-        if (data) {
-          setInspiration(data.name);
-          setInspirationLocation(data.location);
-          setInspirationMarkers(data.markers);
-        }
-      }
-      fetchData();
-      setOpen(true);
+    const fetchData = async () => {
+      const [{ data: characters }, { data: inspirations }] = await Promise.all([
+        supabase.from("fantasy_characters").select("*, inspirations(name)").order("name", { ascending: true }),
+        supabase.from("inspirations").select("*").order("name", { ascending: true })
+      ]);
+      setCharacters(characters ?? []);
+      setInspirations(inspirations ?? []);
     }
-  }, [inspirationId]);
-
-  useEffect(() => {
-      const fetchData = async () => {
-        const { data: characters } = await supabase.from("fantasy_characters").select("*, inspirations(name)").order("name", { ascending: true });
-        setCharacters(characters ?? []);
-        const { data: inspirations } = await supabase.from("inspirations").select("name").order("name", { ascending: true });
-        setInspirations(inspirations?.map(i => i.name) ?? []);
-      }
-      fetchData();
+    fetchData();
   }, []);
 
-  const elements = {
-    name: {
-      label: "Name",
-      value: name,
-      setValue: setName
-    },
-    markers: {
-      label: "Markers",
-      value: markers,
-      setValue: setMarkers,
-      options: Object.keys(PANTHEON_MARKERS),
-    },
-    inspiration: {
-      label: "Inspiration",
-      value: inspiration,
-      setValue: setInspiration,
-      options: inspirations,
-      defaultOption: "Select Inspiration"
-    },
-    newInspiration: {
-      label: "New Inspiration",
-      value: newInspiration,
-      setValue: setNewInspiration
-    },
-    inspirationLocation: {
-      label: "Inspiration Location",
-      value: inspirationLocation,
-      setValue: setInspirationLocation
-    },
-    inspirationMarkers: {
-      label: "Inspiration Markers",
-      value: inspirationMarkers,
-      setValue: setInspirationMarkers,
-      options: Object.keys(INSPIRATION_MARKERS),
+  useEffect(() => {
+    if (inspirationId && inspirations.length > 0) {
+      const data = inspirations.find(i => i.id === Number(inspirationId)); 
+      if (data) {
+        updateForm("inspiration", data.name);
+        updateForm("inspirationLocation", data.location);
+        updateForm("inspirationMarkers", data.markers);
+      }
+      setOpen(true);
     }
+  }, [inspirationId, inspirations]);
+
+  const elements: Record<string, any> = {};
+  elements.name = {
+    label: "Name",
+    value: form.name,
+    setValue: (value: string) => updateForm("name", value)
+  };
+  elements.markers = {
+    label: "Markers",
+    value: form.markers,
+    setValue: (value: string[]) => updateForm("markers", value),
+    options: Object.keys(PANTHEON_MARKERS),
+  };
+  elements.inspiration = {
+    label: "Inspiration",
+    value: form.inspiration,
+    setValue: (value: string) => updateForm("inspiration", value),
+    options: inspirations.map(i => i.name),
+    defaultOption: "Select Inspiration"
+  };
+  if (!inspirationId) {
+    elements.newInspiration = {
+      label: "New Inspiration",
+      value: form.newInspiration,
+      setValue: (value: string) => updateForm("newInspiration", value)
+    }
+  }
+  elements.inspirationLocation = {
+    label: "Inspiration Location",
+    value: form.inspirationLocation,
+    setValue: (value: string) => updateForm("inspirationLocation", value)
+  };
+  elements.inspirationMarkers = {
+    label: "Inspiration Markers",
+    value: form.inspirationMarkers,
+    setValue: (value: string[]) => updateForm("inspirationMarkers", value),
+    options: Object.keys(INSPIRATION_MARKERS),
   };
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     let inspirationId: number | null = null;
-
-    if (inspiration !== "" || newInspiration !== "") {
+    if (form.inspiration !== "" || form.newInspiration !== "") {
       const { data } = await supabase.from("inspirations").upsert({
-        name: inspiration ? inspiration : newInspiration.trim(),
-        location: inspirationLocation.trim(),
-        markers: inspirationMarkers
+        name: form.inspiration ? form.inspiration : form.newInspiration.trim(),
+        location: form.inspirationLocation.trim(),
+        markers: form.inspirationMarkers
       }, { onConflict: "name"}).select().single();
       if (data) {
         inspirationId = data.id;
       }
     }
-
     await supabase.from("fantasy_characters").insert({
-      name: name.trim(),
-      markers: markers,
+      name: form.name.trim(),
+      markers: form.markers,
       inspiration_id: inspirationId
     })
-    setName("");
-    setMarkers([]);
-    setInspiration("");
-    setNewInspiration("");
-    setInspirationLocation("");
-    setInspirationMarkers([]);
+    updateForm("name", "");
+    updateForm("markers", []);
+    updateForm("inspiration", "");
+    updateForm("newInspiration", "");
+    updateForm("inspirationLocation", "");
+    updateForm("inspirationMarkers", []);
     setOpen(false);
     router.replace("/characters");
   }
@@ -132,7 +134,7 @@ export default function Characters() {
         setOpen={setOpen}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={name.trim() === ""}
+        disabled={form.name.trim() === ""}
       />
     </Grid>
   );

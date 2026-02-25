@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
@@ -18,169 +18,175 @@ export default function CharacterPage() {
   const [characterOpen, setCharacterOpen] = useState(false);
   const [relationOpen, setRelationOpen] = useState(false);
 
-  const [characters, setcharacters] = useState<CharacterType[]>([]);
+  const [character, setCharacter] = useState<CharacterType>();
+  const [characters, setCharacters] = useState<CharacterType[]>([]);
   const [relatives, setRelatives] = useState<CharacterType[]>([]);
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
   const [myths, setMyths] = useState<MythType[]>([]);
   const [relationships, setRelationships] = useState<RelationType[]>([]);
 
-  const [character, setCharacter] = useState<CharacterType>();
-  const [name, setName] = useState<string>("");
-  const [pronunciation, setPronunciation] = useState<string>("");
-  const [meaning, setMeaning] = useState<string>("");
-  const [gender, setGender] = useState<string>("");
-  const [markers, setMarkers] = useState<string[]>([]);
-  const [homeland, setHomeland] = useState<string>();
-  const [status, setStatus] = useState<string>("");
-  const [father, setFather] = useState<string>("");
-  const [mother, setMother] = useState<string>("");
+  const initialForm = {
+    name: "",
+    pronunciation: "",
+    gender: "",
+    markers: [] as string[],
+    homeland: "",
+    status: "",
+    father: "",
+    mother: ""
+  };
 
-  const [relationName, setRelationName] = useState<string>("");
-  const [relationType, setRelationType] = useState<string>("");
+  const [characterForm, setCharacterForm] = useState(initialForm);
+  const updateCharacter = (key: string, value: any) => setCharacterForm(prev => ({ ...prev, [key]: value }));
+
+  const [relationForm, setRelationForm] = useState({ relationName: "", relationType: "" });
+  const updateRelation = (key: string, value: any) => setRelationForm(prev => ({ ...prev, [key]: value }));
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: character } = await supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single();
-      setCharacter(character);
-      const { data: characters } = await supabase.from("fantasy_characters").select("*, inspirations(*)");
-      setcharacters(characters ?? []);
-      const { data: relatives } = await supabase.from("fantasy_characters").select("*").neq("id", slug);
+      const [
+        { data: char },
+        { data: characters },
+        { data: relatives },
+        { data: territories },
+        { data: myths },
+        { data: relationships }
+      ] = await Promise.all([
+        supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single(),
+        supabase.from("fantasy_characters").select("*, inspirations(*)").order("name", { ascending: true }),
+        supabase.from("fantasy_characters").select("*").neq("id", slug),
+        supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true }),
+        supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id),
+        supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`)
+      ]);
+      setCharacter(char);
+      setCharacters(characters ?? []);
       setRelatives(relatives ?? []);
-      const { data: territories } = await supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true });
       setTerritories(territories ?? []);
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id);
       setMyths(myths ?? []);
-      const { data: relationships } = await supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`);
       setRelationships(relationships ?? []);
     }
     fetchData();
   }, [slug]);
 
+  useEffect(() => {
+    if (character && territories.length > 0) {
+      setCharacterForm({
+        name: character.name,
+        pronunciation: character.pronunciation,
+        gender: character.gender,
+        status: character.status,
+        markers: character.markers,
+        homeland: territories.find(t => t.id === character.territory_id)?.name ?? "",
+        father: character.father,
+        mother: character.mother
+      });
+    }
+  }, [character, territories]);
+
   const characterElements = {
     name: {
-      label: "Name",
-      value: name,
-      setValue: setName
+      label: "Name", 
+      value: characterForm.name, 
+      setValue: (value: string) => updateCharacter("name", value)
     },
     pronunciation: {
       label: "Pronunciation",
-      value: pronunciation,
-      setValue: setPronunciation
+      value: characterForm.pronunciation,
+      setValue: (value: string) => updateCharacter("pronunciation", value)
     },
     gender: {
       label: "Gender",
-      value: gender,
-      setValue: setGender,
+      value: characterForm.gender,
+      setValue: (value: string) => updateCharacter("gender", value),
       options: ["Male", "Female"],
       defaultOption: "Select Gender"
     },
     markers: {
       label: "Markers",
-      value: markers,
-      setValue: setMarkers,
+      value: characterForm.markers,
+      setValue: (value: string[]) => updateCharacter("markers", value),
       options: Object.keys(PANTHEON_MARKERS)
     },
     homeland: {
       label: "Homeland",
-      value: homeland,
-      setValue: setHomeland,
+      value: characterForm.homeland,
+      setValue: (value: string) => updateCharacter("homeland", value),
       options: territories.map(t => t.name),
       defaultOption: "Select Homeland"
     },
     status: {
       label: "Status",
-      value: status,
-      setValue: setStatus,
-      options: gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
+      value: characterForm.status,
+      setValue: (value: string) => updateCharacter("status", value),
+      options: characterForm.gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
       defaultOption: "Select Status"
     },
     father: {
       label: "Father",
-      value: father,
-      setValue: setFather
+      value: characterForm.father,
+      setValue: (value: string) => updateCharacter("father", value)
     },
     mother: {
       label: "Mother",
-      value: mother,
-      setValue: setMother
+      value: characterForm.mother,
+      setValue: (value: string) => updateCharacter("mother", value)
     }
   }
 
   const handleCharacterSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("fantasy_characters").update({
-      name: name.trim(),
-      pronunciation: pronunciation.trim(),
-      gender: gender.trim(),
-      status: status,
-      markers: markers,
-      territory_id: territories.find(t => t.name === homeland)?.id,
-      father: father.trim(),
-      mother: mother.trim()
+      name: characterForm.name.trim(),
+      pronunciation: characterForm.pronunciation.trim(),
+      gender: characterForm.gender.trim(),
+      status: characterForm.status,
+      markers: characterForm.markers,
+      territory_id: territories.find(t => t.name === characterForm.homeland)?.id,
+      father: characterForm.father.trim(),
+      mother: characterForm.mother.trim()
     }).eq("id", slug);
-    setName("");
-    setPronunciation("");
-    setGender("");
-    setStatus("");
-    setMarkers([]);
-    setHomeland("");
-    setFather("");
-    setMother("");
+    setCharacterForm(initialForm);
     setCharacterOpen(false);
   }
 
-  useEffect(() => {
-    if (character && territories.length > 0) {
-      setName(character.name);
-      setPronunciation(character.pronunciation);
-      setGender(character.gender);
-      setStatus(character.status);
-      setMarkers(character.markers);
-      setHomeland(territories.find(t => t.id === character.territory_id)?.name);
-      setFather(character.father);
-      setMother(character.mother);
-    }
-  }, [character, territories]);
-
-  const relationList: {id: number, name: string, relation: string}[] = [];
-  relatives.forEach(relative => {
-    if (relative.name === father && father !== "") {
-      relationList.push({id: relative.id, name: relative.name, relation: "Father"});
-    }
-    if (relative.name === mother && mother !== "") {
-      relationList.push({id: relative.id, name: relative.name, relation: "Mother"});
-    }
-    if ((relative.father === father && father !== "") || (relative.mother === mother && mother !== "")) {
-      relationList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
-    }
-    if ((relative.father === name && relative.father !== "") || (relative.mother === name && relative.mother !== "")) {
-      if (relative.gender === "Male") {
-        relationList.push({id: relative.id, name: relative.name, relation: "Son"});
-      } else if (relative.gender === "Female") {
-        relationList.push({id: relative.id, name: relative.name, relation: "Daughter"});
+  const relationList = useMemo(() => {
+    const list: {id: number, name: string, relation: string}[] = [];
+    relatives.forEach(relative => {
+      if (relative.name === characterForm.father && characterForm.father) {
+        list.push({id: relative.id, name: relative.name, relation: "Father"});
       }
-    }
-  });
-  relationList.push(...relationships.map(relation => {
-    const relativeId = relation.first_character === character?.id ? relation.second_character : relation.first_character;
-    const relative = characters.find(c => c.id === relativeId);
-    const marriage = relation.type === "Spouse" ? relative?.gender === "Male" ? "Husband" : "Wife" : relation.type;
-    return {id: relativeId, name: relative?.name ?? "", relation: marriage};
-  }));
-  relationList.sort((a, b) => a.name.localeCompare(b.name));
+      if (relative.name === characterForm.mother && characterForm.mother) {
+        list.push({id: relative.id, name: relative.name, relation: "Mother"});
+      }
+      if ((relative.father === characterForm.father && characterForm.father) || (relative.mother === characterForm.mother && characterForm.mother)) {
+        list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
+      }
+      if ((relative.father === characterForm.name && characterForm.father) || (relative.mother === characterForm.name && characterForm.mother)) {
+        list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male" ? "Son" : "Daughter"});
+      }
+    });
+    list.push(...relationships.map(rel => {
+      const relativeId = rel.first_character === character?.id ? rel.second_character : rel.first_character;
+      const relative = characters.find(c => c.id === relativeId);
+      const marriage = rel.type === "Spouse" ? relative?.gender === "Male" ? "Husband" : "Wife" : rel.type;
+      return {id: relativeId, name: relative?.name ?? "", relation: marriage};
+    }));
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }, [relatives, relationships, character, characters, characterForm]);
 
   const relationElements = {
     relationName: {
       label: "Name",
-      value: relationName,
-      setValue: setRelationName,
+      value: relationForm.relationName,
+      setValue: (value: string) => updateRelation("relationName", value),
       options: characters.filter(c => c.id !== Number(slug)).filter(c => !relationList.some(r => r.id === c.id)).map(c => c.name),
       defaultOption: "Select Character"
     },
     relationType: {
       label: "Type",
-      value: relationType,
-      setValue: setRelationType,
+      value: relationForm.relationType,
+      setValue: (value: string) => updateRelation("relationType", value),
       options: ["Spouse", "Lover"],
       defaultOption: "Select Type"
     }
@@ -190,11 +196,10 @@ export default function CharacterPage() {
     e.preventDefault();
     await supabase.from("relationships").insert({
       first_character: character?.id,
-      second_character: characters.find(c => c.name === relationName)?.id,
-      type: relationType
+      second_character: characters.find(c => c.name === relationForm.relationName)?.id,
+      type: relationForm.relationType
     });
-    setRelationName("");
-    setRelationType("");
+    setRelationForm({ relationName: "", relationType: "" });
     setRelationOpen(false);
   }
 
@@ -229,7 +234,7 @@ export default function CharacterPage() {
       </div>
       <section className="@container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Book className="h-8 w-auto" />Legend</h3>
-        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] gap-4 text-center @sm:text-left font-body mt-8">
+        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body mt-8">
           {characterCategories.map(category => (
             <React.Fragment key={category.label}>
               <span className="font-semibold font-serif">{category.label}</span>
@@ -246,14 +251,14 @@ export default function CharacterPage() {
           ))}
         </article>
       </section>
-      <section className="space-y-8 @container">
+      {character?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
         <h3 className="text-center">{character?.inspirations.name}</h3>
-        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] gap-4 text-center @sm:text-left font-body">
+        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body">
           {inspirationCategories.map(category => (
             <React.Fragment key={category.label}>
               <span className="font-semibold font-serif">{category.label}</span>
-              <span className="flex">{category.value}</span>
+              <span className="flex justify-center @sm:justify-start">{category.value}</span>
             </React.Fragment>
           ))}
         </article>
@@ -262,14 +267,14 @@ export default function CharacterPage() {
             <MythSum key={myth.id} data={myth} />
           ))}
         </article>
-      </section>
+      </section>}
       <Modal
         heading="Edit Character"
         open={characterOpen}
         setOpen={setCharacterOpen}
         elements={characterElements}
         handleSubmit={handleCharacterSubmit}
-        disabled={name.trim() === ""}
+        disabled={characterForm.name.trim() === ""}
       />
       <Modal
         heading="Add Relation"
@@ -277,7 +282,7 @@ export default function CharacterPage() {
         setOpen={setRelationOpen}
         elements={relationElements}
         handleSubmit={handleRelationSubmit}
-        disabled={relationName === "" || relationType === ""}
+        disabled={relationForm.relationName === "" || relationForm.relationType === ""}
       />
     </>
   );
