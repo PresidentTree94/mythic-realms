@@ -4,10 +4,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
 import { TerritoryType } from "@/types/territoryType";
+import { MythType } from "@/types/mythType";
 import { Book, Users, ScrollText } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
+import MythSum from "@/components/MythSum";
 import Modal from "@/components/Modal";
-import { PANTHEON_MARKERS } from "@/utils/markers";
+import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 
 export default function CharacterPage() {
 
@@ -15,6 +17,7 @@ export default function CharacterPage() {
   const [open, setOpen] = useState(false);
   const [relatives, setRelatives] = useState<CharacterType[]>([]);
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
+  const [myths, setMyths] = useState<MythType[]>([]);
 
   const [character, setCharacter] = useState<CharacterType>();
   const [name, setName] = useState<string>("");
@@ -29,12 +32,14 @@ export default function CharacterPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: character } = await supabase.from("fantasy_characters").select("*").eq("id", slug).single();
+      const { data: character } = await supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single();
       setCharacter(character);
       const { data: relatives } = await supabase.from("fantasy_characters").select("*").neq("id", slug);
       setRelatives(relatives ?? []);
       const { data: territories } = await supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true });
       setTerritories(territories ?? []);
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id);
+      setMyths(myths ?? []);
     }
     fetchData();
   }, [slug]);
@@ -137,7 +142,15 @@ export default function CharacterPage() {
     {label: "Status", value: character?.status}
   ];
 
-  const inspirationCategories = [];
+  const inspirationCategories = [
+    {label: "Meaning", value: ""},
+    {label: "Location", value: character?.inspirations.location},
+    {label: "Markers", value: character?.inspirations.markers.map(marker => {
+      const Icon = INSPIRATION_MARKERS[marker];
+      return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
+    })},
+    {label: "Myths", value: myths.length}
+  ];
 
   const relativeList: {id: number, name: string, relation: string}[] = [];
   relatives.forEach(relative => {
@@ -186,9 +199,22 @@ export default function CharacterPage() {
           ))}
         </article>
       </section>
-      <section>
+      <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
-        <article className="card mt-8"></article>
+        <h3 className="text-center">{character?.inspirations.name}</h3>
+        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] gap-4 text-center @sm:text-left font-body">
+          {inspirationCategories.map(category => (
+            <React.Fragment key={category.label}>
+              <span className="font-semibold font-serif">{category.label}</span>
+              <span className="flex">{category.value}</span>
+            </React.Fragment>
+          ))}
+        </article>
+        <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {myths.map(myth => (
+            <MythSum key={myth.id} data={myth} />
+          ))}
+        </article>
       </section>
       <Modal
         heading="Edit Character"
