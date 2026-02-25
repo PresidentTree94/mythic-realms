@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
 import { TerritoryType } from "@/types/territoryType";
 import { MythType } from "@/types/mythType";
+import { RelationType } from "@/types/relationType";
 import { Book, Users, ScrollText } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
 import MythSum from "@/components/MythSum";
@@ -14,10 +15,14 @@ import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 export default function CharacterPage() {
 
   const { slug } = useParams();
-  const [open, setOpen] = useState(false);
+  const [characterOpen, setCharacterOpen] = useState(false);
+  const [relationOpen, setRelationOpen] = useState(false);
+
+  const [characters, setcharacters] = useState<CharacterType[]>([]);
   const [relatives, setRelatives] = useState<CharacterType[]>([]);
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
   const [myths, setMyths] = useState<MythType[]>([]);
+  const [relationships, setRelationships] = useState<RelationType[]>([]);
 
   const [character, setCharacter] = useState<CharacterType>();
   const [name, setName] = useState<string>("");
@@ -30,21 +35,28 @@ export default function CharacterPage() {
   const [father, setFather] = useState<string>("");
   const [mother, setMother] = useState<string>("");
 
+  const [relationName, setRelationName] = useState<string>("");
+  const [relationType, setRelationType] = useState<string>("");
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: character } = await supabase.from("fantasy_characters").select("*, inspirations(*)").eq("id", slug).single();
       setCharacter(character);
+      const { data: characters } = await supabase.from("fantasy_characters").select("*, inspirations(*)");
+      setcharacters(characters ?? []);
       const { data: relatives } = await supabase.from("fantasy_characters").select("*").neq("id", slug);
       setRelatives(relatives ?? []);
       const { data: territories } = await supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true });
       setTerritories(territories ?? []);
       const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id);
       setMyths(myths ?? []);
+      const { data: relationships } = await supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`);
+      setRelationships(relationships ?? []);
     }
     fetchData();
   }, [slug]);
 
-  const elements = {
+  const characterElements = {
     name: {
       label: "Name",
       value: name,
@@ -94,7 +106,7 @@ export default function CharacterPage() {
     }
   }
 
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+  const handleCharacterSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("fantasy_characters").update({
       name: name.trim(),
@@ -114,7 +126,7 @@ export default function CharacterPage() {
     setHomeland("");
     setFather("");
     setMother("");
-    setOpen(false);
+    setCharacterOpen(false);
   }
 
   useEffect(() => {
@@ -129,6 +141,61 @@ export default function CharacterPage() {
       setMother(character.mother);
     }
   }, [character, territories]);
+
+  const relationList: {id: number, name: string, relation: string}[] = [];
+  relatives.forEach(relative => {
+    if (relative.name === father && father !== "") {
+      relationList.push({id: relative.id, name: relative.name, relation: "Father"});
+    }
+    if (relative.name === mother && mother !== "") {
+      relationList.push({id: relative.id, name: relative.name, relation: "Mother"});
+    }
+    if ((relative.father === father && father !== "") || (relative.mother === mother && mother !== "")) {
+      relationList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
+    }
+    if ((relative.father === name && relative.father !== "") || (relative.mother === name && relative.mother !== "")) {
+      if (relative.gender === "Male") {
+        relationList.push({id: relative.id, name: relative.name, relation: "Son"});
+      } else if (relative.gender === "Female") {
+        relationList.push({id: relative.id, name: relative.name, relation: "Daughter"});
+      }
+    }
+  });
+  relationList.push(...relationships.map(relation => {
+    const relativeId = relation.first_character === character?.id ? relation.second_character : relation.first_character;
+    const relative = characters.find(c => c.id === relativeId);
+    return {id: relativeId, name: relative?.name ?? "", relation: relation.type};
+  }));
+  relationList.sort((a, b) => a.name.localeCompare(b.name));
+
+  const relationElements = {
+    relationName: {
+      label: "Name",
+      value: relationName,
+      setValue: setRelationName,
+      options: characters.filter(c => c.id !== Number(slug)).filter(c => !relationList.some(r => r.id === c.id)).map(c => c.name),
+      defaultOption: "Select Character"
+    },
+    relationType: {
+      label: "Type",
+      value: relationType,
+      setValue: setRelationType,
+      options: ["Spouse", "Lover"],
+      defaultOption: "Select Type"
+    }
+  }
+
+  const handleRelationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    await supabase.from("relationships").insert({
+      first_character: character?.id,
+      second_character: characters.find(c => c.name === relationName)?.id,
+      type: relationType
+    });
+    setRelationName("");
+    setRelationType("");
+    setRelationOpen(false);
+  }
 
   const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
@@ -152,33 +219,12 @@ export default function CharacterPage() {
     {label: "Myths", value: myths.length}
   ];
 
-  const relativeList: {id: number, name: string, relation: string}[] = [];
-  relatives.forEach(relative => {
-    if (relative.name === father && father !== "") {
-      relativeList.push({id: relative.id, name: relative.name, relation: "Father"});
-    }
-    if (relative.name === mother && mother !== "") {
-      relativeList.push({id: relative.id, name: relative.name, relation: "Mother"});
-    }
-    if ((relative.father === father && father !== "") || (relative.mother === mother && mother !== "")) {
-      relativeList.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
-    }
-    if ((relative.father === name && relative.father !== "") || (relative.mother === name && relative.mother !== "")) {
-      if (relative.gender === "Male") {
-        relativeList.push({id: relative.id, name: relative.name, relation: "Son"});
-      } else if (relative.gender === "Female") {
-        relativeList.push({id: relative.id, name: relative.name, relation: "Daughter"});
-      }
-    }
-  });
-  relativeList.sort((a, b) => a.name.localeCompare(b.name));
-
   return (
     <>
       <h2 className="mt-16 text-center">{character?.name}</h2>
       <div className="flex justify-center gap-4 flex-wrap">
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpen(true)}>Edit Character</button>
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Relation</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setCharacterOpen(true)}>Edit Character</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setRelationOpen(true)}>Add Relation</button>
       </div>
       <section className="@container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Book className="h-8 w-auto" />Legend</h3>
@@ -194,7 +240,7 @@ export default function CharacterPage() {
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Lineage & Kin</h3>
         <article className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
-          {relativeList.map(relative => (
+          {relationList.map(relative => (
             <Relation key={relative.name} data={relative} />
           ))}
         </article>
@@ -218,11 +264,19 @@ export default function CharacterPage() {
       </section>
       <Modal
         heading="Edit Character"
-        open={open}
-        setOpen={setOpen}
-        elements={elements}
-        handleSubmit={handleSubmit}
+        open={characterOpen}
+        setOpen={setCharacterOpen}
+        elements={characterElements}
+        handleSubmit={handleCharacterSubmit}
         disabled={name.trim() === ""}
+      />
+      <Modal
+        heading="Add Relation"
+        open={relationOpen}
+        setOpen={setRelationOpen}
+        elements={relationElements}
+        handleSubmit={handleRelationSubmit}
+        disabled={relationName === "" || relationType === ""}
       />
     </>
   );
