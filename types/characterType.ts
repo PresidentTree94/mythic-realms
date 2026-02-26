@@ -4,6 +4,7 @@ export type CharacterType = {
   id: number;
   name: string;
   pronunciation: string;
+  meaning: string;
   gender: string;
   markers: string[];
   status: string;

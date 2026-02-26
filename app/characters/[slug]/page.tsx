@@ -28,6 +28,7 @@ export default function CharacterPage() {
   const initialForm = {
     name: "",
     pronunciation: "",
+    meaning: "",
     gender: "",
     markers: [] as string[],
     homeland: "",
@@ -72,6 +73,7 @@ export default function CharacterPage() {
       setCharacterForm({
         name: character.name,
         pronunciation: character.pronunciation,
+        meaning: character.meaning,
         gender: character.gender,
         status: character.status,
         markers: character.markers,
@@ -92,6 +94,11 @@ export default function CharacterPage() {
       label: "Pronunciation",
       value: characterForm.pronunciation,
       setValue: (value: string) => updateCharacter("pronunciation", value)
+    },
+    meaning: {
+      label: "Meaning",
+      value: characterForm.meaning,
+      setValue: (value: string) => updateCharacter("meaning", value)
     },
     gender: {
       label: "Gender",
@@ -137,6 +144,7 @@ export default function CharacterPage() {
     await supabase.from("fantasy_characters").update({
       name: characterForm.name.trim(),
       pronunciation: characterForm.pronunciation.trim(),
+      meaning: characterForm.meaning.trim(),
       gender: characterForm.gender.trim(),
       status: characterForm.status,
       markers: characterForm.markers,
@@ -203,7 +211,7 @@ export default function CharacterPage() {
 
   const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
-    {label: "Meaning", value: ""},
+    {label: "Meaning", value: character?.meaning},
     {label: "Gender", value: character?.gender},
     {label: "Markers", value: character?.markers.map(marker => {
       const Icon = PANTHEON_MARKERS[marker];
