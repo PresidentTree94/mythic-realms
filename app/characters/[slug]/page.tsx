@@ -17,6 +17,7 @@ export default function CharacterPage() {
   const { slug } = useParams();
   const [characterOpen, setCharacterOpen] = useState(false);
   const [relationOpen, setRelationOpen] = useState(false);
+  const [inspirationOpen, setInspirationOpen] = useState(false);
 
   const [character, setCharacter] = useState<CharacterType>();
   const [characters, setCharacters] = useState<CharacterType[]>([]);
@@ -25,7 +26,7 @@ export default function CharacterPage() {
   const [myths, setMyths] = useState<MythType[]>([]);
   const [relationships, setRelationships] = useState<RelationType[]>([]);
 
-  const initialForm = {
+  const initialCharacterForm = {
     name: "",
     pronunciation: "",
     meaning: "",
@@ -37,11 +38,21 @@ export default function CharacterPage() {
     mother: ""
   };
 
-  const [characterForm, setCharacterForm] = useState(initialForm);
+  const initialInspirationForm = {
+    name: "",
+    meaning: "",
+    location: "",
+    markers: [] as string[]
+  };
+
+  const [characterForm, setCharacterForm] = useState(initialCharacterForm);
   const updateCharacter = (key: string, value: any) => setCharacterForm(prev => ({ ...prev, [key]: value }));
 
   const [relationForm, setRelationForm] = useState({ relationName: "", relationType: "" });
   const updateRelation = (key: string, value: any) => setRelationForm(prev => ({ ...prev, [key]: value }));
+
+  const [inspirationForm, setInspirationForm] = useState(initialInspirationForm);
+  const updateInspiration = (key: string, value: any) => setInspirationForm(prev => ({ ...prev, [key]: value }));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,17 +60,15 @@ export default function CharacterPage() {
         { data: characters },
         { data: relatives },
         { data: territories },
-        { data: myths },
         { data: relationships }
       ] = await Promise.all([
         supabase.from("fantasy_characters").select("*, inspirations(*)").order("name", { ascending: true }),
         supabase.from("fantasy_characters").select("*").neq("id", slug),
         supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true }),
-        supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id),
         supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`)
       ]);
       setCharacters(characters ?? []);
-      setCharacter(characters?.find(c => c.id === Number(slug)) ?? undefined);
+      setCharacter(characters?.find(c => c.id === Number(slug)));
       setRelatives(relatives ?? []);
       setTerritories(territories ?? []);
       setMyths(myths ?? []);
@@ -69,7 +78,15 @@ export default function CharacterPage() {
   }, [slug]);
 
   useEffect(() => {
-    if (character && territories.length > 0) {
+    const fetchData = async () => {
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id).order("title", { ascending: true });
+      setMyths(myths ?? []);
+    }
+    fetchData();
+  }, [character]);
+
+  useEffect(() => {
+    if (character) {
       setCharacterForm({
         name: character.name,
         pronunciation: character.pronunciation,
@@ -81,8 +98,14 @@ export default function CharacterPage() {
         father: character.father,
         mother: character.mother
       });
+      setInspirationForm({
+        name: character.inspirations.name,
+        meaning: character.inspirations.meaning,
+        location: character.inspirations.location,
+        markers: character.inspirations.markers
+      });
     }
-  }, [character, territories]);
+  }, [character]);
 
   const characterElements = {
     name: {
@@ -144,7 +167,7 @@ export default function CharacterPage() {
     await supabase.from("fantasy_characters").update({
       name: characterForm.name.trim(),
       pronunciation: characterForm.pronunciation.trim(),
-      meaning: characterForm.meaning.trim(),
+      meaning: '"' + characterForm.meaning.trim() + '"',
       gender: characterForm.gender.trim(),
       status: characterForm.status,
       markers: characterForm.markers,
@@ -152,7 +175,7 @@ export default function CharacterPage() {
       father: characterForm.father.trim(),
       mother: characterForm.mother.trim()
     }).eq("id", slug);
-    setCharacterForm(initialForm);
+    setCharacterForm(initialCharacterForm);
     setCharacterOpen(false);
   }
 
@@ -168,7 +191,7 @@ export default function CharacterPage() {
       if ((relative.father === characterForm.father && characterForm.father) || (relative.mother === characterForm.mother && characterForm.mother)) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
       }
-      if (relative.father === characterForm.name || relative.mother === characterForm.name) {
+      if (((relative.father === characterForm.name) || relative.mother === characterForm.name) && characterForm.name) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male" ? "Son" : "Daughter"});
       }
     });
@@ -209,6 +232,42 @@ export default function CharacterPage() {
     setRelationOpen(false);
   }
 
+  const inspirationElements = {
+    name: {
+      label: "Name",
+      value: inspirationForm.name,
+      setValue: (value: string) => updateInspiration("name", value)
+    },
+    meaning: {
+      label: "Meaning",
+      value: inspirationForm.meaning,
+      setValue: (value: string) => updateInspiration("meaning", value)
+    },
+    location: {
+      label: "Location",
+      value: inspirationForm.location,
+      setValue: (value: string) => updateInspiration("location", value)
+    },
+    markers: {
+      label: "Markers",
+      value: inspirationForm.markers,
+      setValue: (value: string[]) => updateInspiration("markers", value),
+      options: Object.keys(INSPIRATION_MARKERS)
+    }
+  }
+
+  const handleInspirationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    await supabase.from("inspirations").update({
+      name: inspirationForm.name.trim(),
+      meaning: inspirationForm.meaning.trim(),
+      location: inspirationForm.location.trim(),
+      markers: inspirationForm.markers
+    }).eq("id", character?.inspiration_id);
+    setInspirationForm(initialInspirationForm);
+    setInspirationOpen(false);
+  }
+
   const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
     {label: "Meaning", value: character?.meaning},
@@ -230,6 +289,8 @@ export default function CharacterPage() {
     })},
     {label: "Myths", value: myths.length}
   ];
+
+  console.log(myths);
 
   return (
     <>
@@ -260,6 +321,9 @@ export default function CharacterPage() {
       {character?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
         <h3 className="text-center">{character?.inspirations.name}</h3>
+        <div className="text-center">
+          <button className="bg-primary text-background text-lg font-medium font-heading px-4 py-2 cursor-pointer" onClick={() => setInspirationOpen(true)}>Edit Inspiration</button>
+        </div>
         <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body">
           {inspirationCategories.map(category => (
             <React.Fragment key={category.label}>
@@ -289,6 +353,14 @@ export default function CharacterPage() {
         elements={relationElements}
         handleSubmit={handleRelationSubmit}
         disabled={relationForm.relationName === "" || relationForm.relationType === ""}
+      />
+      <Modal
+        heading="Edit Inspiration"
+        open={inspirationOpen}
+        setOpen={setInspirationOpen}
+        elements={inspirationElements}
+        handleSubmit={handleInspirationSubmit}
+        disabled={inspirationForm.name.trim() === ""}
       />
     </>
   );
