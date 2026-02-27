@@ -5,18 +5,23 @@ import Kingdom from "@/components/kingdomComps/Kingdom";
 import { KingdomType } from "@/types/kingdomType";
 import Grid from "@/components/Grid";
 import Modal from "@/components/Modal";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function Kingdoms() {
 
-  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<string | null>(null);
   const [kingdoms, setKingdoms] = useState<KingdomType[]>([]);
-  const [name, setName] = useState("");
-  const [crest, setCrest] = useState("");
-  const [government, setGovernment] = useState("");
-  const [greek, setGreek] = useState("");
-  const [greekLocation, setGreekLocation] = useState("");
-  const [medieval, setMedieval] = useState("");
-  const [medievalLocation, setMedievalLocation] = useState("");
+
+  const kingdomForm = useFormState({
+    name: "",
+    crest: "",
+    government: "",
+    greek: "",
+    greekLocation: "",
+    medieval: "",
+    medievalLocation: ""
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,74 +31,40 @@ export default function Kingdoms() {
     fetchData();
   }, []);
 
-  const elements = {
-    name: {
-      label: "Name",
-      value: name,
-      setValue: setName
-    },
-    crest: {
-      label: "Crest",
-      value: crest,
-      setValue: setCrest
-    },
-    government: {
-      label: "Government",
-      value: government,
-      setValue: setGovernment
-    },
-    greek: {
-      label: "Greek",
-      value: greek,
-      setValue: setGreek
-    },
-    greekLocation: {
-      label: "Location",
-      value: greekLocation,
-      setValue: setGreekLocation
-    },
-    medieval: {
-      label: "Medieval",
-      value: medieval,
-      setValue: setMedieval
-    },
-    medievalLocation: {
-      label: "Location",
-      value: medievalLocation,
-      setValue: setMedievalLocation
-    }
-  }
+  const elements = buildFormElements(kingdomForm.form, kingdomForm.update, {
+    name: { label: "Name" },
+    crest: { label: "Crest" },
+    government: { label: "Government" },
+    greek: { label: "Greek" },
+    greekLocation: { label: "Greek Location" },
+    medieval: { label: "Medieval" },
+    medievalLocation: { label: "Medieval Location" }
+  });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    const { data: kingdom } = await supabase.from("kingdoms").insert({ name: name.trim(), crest: crest.trim(), government: government.trim() }).select().single();
-    await supabase.from("counterparts").insert({ name: greek.trim(), type: "Greek", location: greekLocation.trim(), kingdom_id: kingdom?.id ?? 0 }).select().single();
-    await supabase.from("counterparts").insert({ name: medieval.trim(), type: "Medieval", location: medievalLocation.trim(), kingdom_id: kingdom?.id ?? 0 }).select().single();
-    setName("");
-    setCrest("");
-    setGovernment("");
-    setGreek("");
-    setGreekLocation("");
-    setMedieval("");
-    setMedievalLocation("");
-    setOpen(false);
+    const { data: kingdom } = await supabase.from("kingdoms").insert({ name: kingdomForm.form.name.trim(), crest: kingdomForm.form.crest.trim(), government: kingdomForm.form.government.trim() }).select().single();
+    await supabase.from("counterparts").insert({ name: kingdomForm.form.greek.trim(), type: "Greek", location: kingdomForm.form.greekLocation.trim(), kingdom_id: kingdom?.id ?? 0 }).select().single();
+    await supabase.from("counterparts").insert({ name: kingdomForm.form.medieval.trim(), type: "Medieval", location: kingdomForm.form.medievalLocation.trim(), kingdom_id: kingdom?.id ?? 0 }).select().single();
+    kingdomForm.reset();
+    setOpenModal(null);
   }
 
   return (
     <Grid
       title="Realms & Echoes"
       quote="History does not repeat itself, but it rhymes. See how the great city-states of old have been reborn in steel and stone."
-      button={{ label: "Add Kingdom", onClick: () => setOpen(true) }}
+      button={{ label: "Add Kingdom", onClick: () => setOpenModal("kingdom") }}
       gridStyle=""
       data={kingdoms}
       dataComponent={Kingdom}>
         <Modal
-          heading="Add New Kingdom"
-          open={open}
-          setOpen={setOpen}
+          heading="Add Kingdom"
+          open={openModal === "kingdom"}
+          setOpen={setOpenModal}
           elements={elements}
           handleSubmit={handleSubmit}
-          disabled={name.trim() === ""}
+          disabled={kingdomForm.form.name.trim() === ""}
         />
     </Grid>
   );

@@ -9,7 +9,7 @@ export default function buildFormElements<T extends object>(
       {
         ...config,
         value: form[key as keyof T],
-        setValue: (value: any) => update(key as keyof T, value)
+        setValue: (value: any) => update(key as keyof T, value),
       }
     ])
   );

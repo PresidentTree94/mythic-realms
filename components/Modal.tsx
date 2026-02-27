@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 
-type ModalType = "character" | "relation" | "inspiration" | null;
-
 export default function Modal({
   heading, open, setOpen, elements, handleSubmit, handleDelete, disabled
 }:Readonly<{
   heading: string;
   open: boolean;
-  setOpen: (open: ModalType) => void;
+  setOpen: (open: string | null) => void;
   elements: Record<string, any>;
   handleSubmit: React.SubmitEventHandler<HTMLFormElement>;
   handleDelete?: () => void;

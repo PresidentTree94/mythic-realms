@@ -9,18 +9,20 @@ import { InspirationType } from "@/types/inspirationType";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function Characters() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const inspirationId = searchParams.get("inspiration");
-  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<string | null>(null);
 
   const [characters, setCharacters] = useState<CharacterType[]>([]);
   const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
-  const [form, setForm] = useState({
+  const characterForm = useFormState({
     name: "",
     markers: [] as string[],
     inspiration: "",
@@ -28,7 +30,6 @@ export default function Characters() {
     inspirationLocation: "",
     inspirationMarkers: [] as string[]
   });
-  const updateForm = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,77 +47,58 @@ export default function Characters() {
     if (inspirationId && inspirations.length > 0) {
       const data = inspirations.find(i => i.id === Number(inspirationId)); 
       if (data) {
-        updateForm("inspiration", data.name);
-        updateForm("inspirationLocation", data.location);
-        updateForm("inspirationMarkers", data.markers);
+        characterForm.setForm({
+          name: "",
+          markers: [],
+          inspiration: data.name,
+          newInspiration: "",
+          inspirationLocation: data.location,
+          inspirationMarkers: data.markers
+        });
       }
-      setOpen(true);
+      setOpenModal("character");
     }
   }, [inspirationId, inspirations]);
 
-  const elements: Record<string, any> = {};
-  elements.name = {
-    label: "Name",
-    value: form.name,
-    setValue: (value: string) => updateForm("name", value)
-  };
-  elements.markers = {
-    label: "Markers",
-    value: form.markers,
-    setValue: (value: string[]) => updateForm("markers", value),
-    options: Object.keys(PANTHEON_MARKERS),
-  };
-  elements.inspiration = {
-    label: "Inspiration",
-    value: form.inspiration,
-    setValue: (value: string) => updateForm("inspiration", value),
-    options: inspirations.map(i => i.name),
-    defaultOption: "Select Inspiration"
-  };
-  if (!inspirationId) {
-    elements.newInspiration = {
-      label: "New Inspiration",
-      value: form.newInspiration,
-      setValue: (value: string) => updateForm("newInspiration", value)
+  const elements = buildFormElements(characterForm.form, characterForm.update, {
+    name: { label: "Name" },
+    markers: {
+      label: "Markers",
+      options: Object.keys(PANTHEON_MARKERS)
+    },
+    inspiration: {
+      label: "Inspiration",
+      options: inspirations.map(i => i.name),
+      defaultOption: "Select Inspiration"
+    },
+    newInspiration: { label: "New Inspiration" },
+    inspirationLocation: { label: "Inspiration Location" },
+    inspirationMarkers: {
+      label: "Inspiration Markers",
+      options: Object.keys(INSPIRATION_MARKERS)
     }
-  }
-  elements.inspirationLocation = {
-    label: "Inspiration Location",
-    value: form.inspirationLocation,
-    setValue: (value: string) => updateForm("inspirationLocation", value)
-  };
-  elements.inspirationMarkers = {
-    label: "Inspiration Markers",
-    value: form.inspirationMarkers,
-    setValue: (value: string[]) => updateForm("inspirationMarkers", value),
-    options: Object.keys(INSPIRATION_MARKERS),
-  };
+  });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     let inspirationId: number | null = null;
-    if (form.inspiration !== "" || form.newInspiration !== "") {
+    if (characterForm.form.inspiration !== "" || characterForm.form.newInspiration !== "") {
       const { data } = await supabase.from("inspirations").upsert({
-        name: form.inspiration ? form.inspiration : form.newInspiration.trim(),
-        location: form.inspirationLocation.trim(),
-        markers: form.inspirationMarkers
+        name: characterForm.form.inspiration ? characterForm.form.inspiration : characterForm.form.newInspiration.trim(),
+        location: characterForm.form.inspirationLocation.trim(),
+        markers: characterForm.form.inspirationMarkers
       }, { onConflict: "name"}).select().single();
       if (data) {
         inspirationId = data.id;
       }
     }
     await supabase.from("fantasy_characters").insert({
-      name: form.name.trim(),
-      markers: form.markers,
+      name: characterForm.form.name.trim(),
+      markers: characterForm.form.markers,
       inspiration_id: inspirationId
     })
-    updateForm("name", "");
-    updateForm("markers", []);
-    updateForm("inspiration", "");
-    updateForm("newInspiration", "");
-    updateForm("inspirationLocation", "");
-    updateForm("inspirationMarkers", []);
-    setOpen(false);
+    characterForm.reset();
+    setOpenModal(null);
     router.replace("/characters");
   }
 
@@ -124,17 +106,17 @@ export default function Characters() {
     <Grid
       title="Dramatis Personae"
       quote="Heroes are not born; they are forged in the fires of tragedy and triumph."
-      button={{ label: "Add Character", onClick: () => setOpen(true) }}
+      button={{ label: "Add Character", onClick: () => setOpenModal("character") }}
       gridStyle="sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       data={characters}
       dataComponent={Character}>
       <Modal
         heading="Add Character"
-        open={open}
-        setOpen={setOpen}
+        open={openModal === "character"}
+        setOpen={setOpenModal}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={form.name.trim() === ""}
+        disabled={characterForm.form.name.trim() === ""}
       />
     </Grid>
   );

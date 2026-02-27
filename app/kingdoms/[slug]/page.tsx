@@ -10,20 +10,20 @@ import Territory from "@/components/kingdomComps/Territory";
 import Counterpart from "@/components/kingdomComps/Counterpart";
 import Modal from "@/components/Modal";
 import Relation from "@/components/characterComps/Relation";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function KingdomPage() {
 
   const { slug } = useParams();
-  const [kingdomOpen, setKingdomOpen] = useState(false);
-  const [territoryOpen, setTerritoryOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<string | null>(null);
+
   const [kingdom, setKingdom] = useState<KingdomType>();
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
   const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [name, setName] = useState("");
-  const [crest, setCrest] = useState("");
-  const [government, setGovernment] = useState("");
-  const [territoryName, setTerritoryName] = useState("");
-  const [territoryCounterpart, setTerritoryCounterpart] = useState("");
+
+  const kingdomForm = useFormState({ name: "", crest: "", government: "" });
+  const territoryForm = useFormState({ name: "", counterpart: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,76 +40,55 @@ export default function KingdomPage() {
   const greek = kingdom?.counterparts.find(counterpart => counterpart.type === "Greek");
   const medieval = kingdom?.counterparts.find(counterpart => counterpart.type === "Medieval");
 
-  const kingdomElements = {
-    name: {
-      label: "Name",
-      value: name,
-      setValue: setName
-    },
-    crest: {
-      label: "Crest",
-      value: crest,
-      setValue: setCrest
-    },
-    government: {
-      label: "Government",
-      value: government,
-      setValue: setGovernment
-    }
-  };
+  const kingdomElements = buildFormElements(kingdomForm.form, kingdomForm.update, {
+    name: { label: "Name" },
+    crest: { label: "Crest" },
+    government: { label: "Government" }
+  });
 
   useEffect(() => {
     if (kingdom) {
-      setName(kingdom.name);
-      setCrest(kingdom.crest);
-      setGovernment(kingdom.government);
+      kingdomForm.setForm({
+        name: kingdom.name,
+        crest: kingdom.crest,
+        government: kingdom.government
+      });
     }
   }, [kingdom]);
 
   const handleKingdomSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("kingdoms").update({
-      name: name.trim(),
-      crest: crest.trim(),
-      government: government.trim()
+      name: kingdomForm.form.name.trim(),
+      crest: kingdomForm.form.crest.trim(),
+      government: kingdomForm.form.government.trim()
     }).eq("id", slug);
-    setName("");
-    setCrest("");
-    setGovernment("");
-    setKingdomOpen(false);
+    kingdomForm.reset();
+    setOpenModal(null);
   }
 
-  const territoryElements = {
-    name: {
-      label: "Name",
-      value: territoryName,
-      setValue: setTerritoryName
-    },
-    counterpart: {
-      label: "Counterpart",
-      value: territoryCounterpart,
-      setValue: setTerritoryCounterpart
-    }
-  };
+  const territoryElements = buildFormElements(territoryForm.form, territoryForm.update, {
+    name: { label: "Name" },
+    counterpart: { label: "Counterpart" }
+  });
 
   const handleTerritorySubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("territories").insert({
-      name: territoryName.trim(),
-      counterpart: territoryCounterpart.trim(),
+      name: territoryForm.form.name.trim(),
+      counterpart: territoryForm.form.counterpart.trim(),
       kingdom_id: slug
     });
-    setTerritoryName("");
-    setTerritoryCounterpart("");
-    setTerritoryOpen(false);
+    territoryForm.reset();
+    setOpenModal(null);
   }
 
   return (
     <>
       <h2 className="mt-16 text-center">{kingdom?.name}</h2>
       <div className="flex justify-center gap-4 flex-wrap">
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setKingdomOpen(true)}>Edit Kingdom</button>
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setTerritoryOpen(true)}>Add Territory</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpenModal("kingdom")}>Edit Kingdom</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpenModal("territory")}>Add Territory</button>
       </div>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Notable Residents</h3>
@@ -136,19 +115,19 @@ export default function KingdomPage() {
       </section>
       <Modal
         heading="Edit Kingdom"
-        open={kingdomOpen}
-        setOpen={setKingdomOpen}
+        open={openModal === "kingdom"}
+        setOpen={setOpenModal}
         elements={kingdomElements}
         handleSubmit={handleKingdomSubmit}
-        disabled={name.trim() === ""}
+        disabled={kingdomForm.form.name.trim() === ""}
       />
       <Modal
         heading="Add Territory"
-        open={territoryOpen}
-        setOpen={setTerritoryOpen}
+        open={openModal === "territory"}
+        setOpen={setOpenModal}
         elements={territoryElements}
         handleSubmit={handleTerritorySubmit}
-        disabled={territoryName.trim() === "" || territoryCounterpart.trim() === ""}
+        disabled={territoryForm.form.name.trim() === "" || territoryForm.form.counterpart.trim() === ""}
       />
     </>
   );

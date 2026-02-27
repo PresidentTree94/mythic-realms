@@ -3,48 +3,33 @@ import { supabase } from "@/lib/supabaseClient";
 import { MythType } from "@/types/mythType";
 import Modal from "../Modal";
 import { INSPIRATION_MARKERS } from "@/utils/markers";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState(data.inspirations.name);
-  const [location, setLocation] = useState(data.inspirations.location);
-  const [markers, setMarkers] = useState(data.inspirations.markers);
-  const [contribution, setContribution] = useState(data.contribution);
+  const [openModal, setOpenModal] = useState<string | null>(null);
 
-  const elements = {
-    name: {
-      label: "Name",
-      value: name,
-      setValue: setName
-    },
-    location: {
-      label: "Location",
-      value: location,
-      setValue: setLocation
-    },
-    markers: {
-      label: "Markers",
-      value: markers,
-      setValue: setMarkers,
-      options: Object.keys(INSPIRATION_MARKERS)
-    },
-    contribution: {
-      label: "Contribution",
-      value: contribution,
-      setValue: setContribution
-    }
-  }
+  const contributionForm = useFormState({
+    name: data.inspirations.name,
+    location: data.inspirations.location,
+    markers: data.inspirations.markers,
+    contribution: data.contribution
+  });
+
+  const elements = buildFormElements(contributionForm.form, contributionForm.update, {
+    name: { label: "Name" },
+    location: { label: "Location" },
+    markers: { label: "Markers", options: Object.keys(INSPIRATION_MARKERS) },
+    contribution: { label: "Contribution" }
+  });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("inspirations").update({ name: name.trim(), location: location.trim(), markers: markers }).eq("id", data.inspirations.id);
-    await supabase.from("myth_insp").update({ contribution: contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
-    setName("");
-    setLocation("");
-    setMarkers([]);
-    setContribution("");
-    setOpen(false);
+    await supabase.from("inspirations").update({ name: contributionForm.form.name.trim(), location: contributionForm.form.location.trim(), markers: contributionForm.form.markers }).eq("id", data.inspirations.id);
+    await supabase.from("myth_insp").update({ contribution: contributionForm.form.contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
+    contributionForm.reset();
+    setOpenModal(null);
   }
 
   const handleDelete = async () => {
@@ -75,17 +60,17 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
             <p className="text-xs font-body italic mb-2">{data.inspirations.location}</p>
             <p className="font-serif">{data.contribution}</p>
           </div>
-          <button onClick={() => setOpen(true)} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>
+          <button onClick={() => setOpenModal("contribution")} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>
         </div>
       </div>
       <Modal
         heading="Edit Contribution"
-        open={open}
-        setOpen={setOpen}
+        open={openModal === "contribution"}
+        setOpen={setOpenModal}
         elements={elements}
         handleSubmit={handleSubmit}
         handleDelete={handleDelete}
-        disabled={name.trim() === ""}
+        disabled={contributionForm.form.name.trim() === ""}
       />
     </>
   );

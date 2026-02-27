@@ -2,17 +2,21 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { KingdomType } from "@/types/kingdomType";
 import Modal from "../Modal";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function Counterpart({ data }: { data: KingdomType["counterparts"][0] }) {
 
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState(data.name);
-  const [founder, setFounder] = useState(data.founder);
-  const [location, setLocation] = useState(data.location);
-  const [primaryGov, setPrimaryGov] = useState(data.primary_gov);
-  const [secondaryGov, setSecondaryGov] = useState(data.secondary_gov);
-  const [economy, setEconomy] = useState(data.economy);
-  const [religion, setReligion] = useState(data.religion);
+  const [openModal, setOpenModal] = useState<string | null>(null);
+  const counterpartForm = useFormState({
+    name: data.name,
+    founder: data.founder,
+    location: data.location,
+    primary_gov: data.primary_gov,
+    secondary_gov: data.secondary_gov,
+    economy: data.economy,
+    religion: data.religion
+  });
 
   const categories = [
     {label: "Founder", value: data.founder},
@@ -23,63 +27,29 @@ export default function Counterpart({ data }: { data: KingdomType["counterparts"
     {label: "Religion", value: data.religion}
   ];
 
-  const elements = {
-    name: {
-      label: "Name",
-      value: name,
-      setValue: setName
-    },
-    founder: {
-      label: "Founder",
-      value: founder,
-      setValue: setFounder
-    },
-    location: {
-      label: "Location",
-      value: location,
-      setValue: setLocation
-    },
-    primaryGov: {
-      label: "Primary Gov.",
-      value: primaryGov,
-      setValue: setPrimaryGov
-    },
-    secondaryGov: {
-      label: "Secondary Gov.",
-      value: secondaryGov,
-      setValue: setSecondaryGov
-    },
-    economy: {
-      label: "Economy",
-      value: economy,
-      setValue: setEconomy
-    },
-    religion: {
-      label: "Religion",
-      value: religion,
-      setValue: setReligion
-    }
-  };
+  const elements = buildFormElements(counterpartForm.form, counterpartForm.update, {
+    name: { label: "Name" },
+    founder: { label: "Founder" },
+    location: { label: "Location" },
+    primary_gov: { label: "Primary Gov." },
+    secondary_gov: { label: "Secondary Gov." },
+    economy: { label: "Economy" },
+    religion: { label: "Religion" }
+  });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("counterparts").update({
-      name: name.trim(),
-      founder: founder.trim(),
-      location: location.trim(),
-      primary_gov: primaryGov.trim(),
-      secondary_gov: secondaryGov.trim(),
-      economy: economy.trim(),
-      religion: religion.trim()
+      name: counterpartForm.form.name.trim(),
+      founder: counterpartForm.form.founder.trim(),
+      location: counterpartForm.form.location.trim(),
+      primary_gov: counterpartForm.form.primary_gov.trim(),
+      secondary_gov: counterpartForm.form.secondary_gov.trim(),
+      economy: counterpartForm.form.economy.trim(),
+      religion: counterpartForm.form.religion.trim()
     }).eq("id", data.id);
-    setName("");
-    setFounder("");
-    setLocation("");
-    setPrimaryGov("");
-    setSecondaryGov("");
-    setEconomy("");
-    setReligion("");
-    setOpen(false);
+    counterpartForm.reset();
+    setOpenModal(null);
   }
 
   return (
@@ -96,15 +66,15 @@ export default function Counterpart({ data }: { data: KingdomType["counterparts"
             ))}
           </div>
         </div>
-        <button className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full" onClick={() => setOpen(true)}>Edit</button>
+        <button className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full" onClick={() => setOpenModal("counterpart")}>Edit</button>
       </div>
       <Modal
         heading="Edit Counterpart"
-        open={open}
-        setOpen={setOpen}
+        open={openModal === "counterpart"}
+        setOpen={setOpenModal}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={name.trim() === "" || location.trim() === ""}
+        disabled={counterpartForm.form.name.trim() === "" || counterpartForm.form.location.trim() === ""}
       />
     </>
   );

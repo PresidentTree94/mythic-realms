@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+export type ModalType = "character" | "inspiration" | "kingdom" | "relation" | null;
+
 export default function useFormState<T>(initial: T) {
   const [form, setForm] = useState<T>(initial);
   const update = (key: keyof T, value: any) => setForm(prev => ({ ...prev, [key]: value }));

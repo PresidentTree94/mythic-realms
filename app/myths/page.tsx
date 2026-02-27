@@ -5,13 +5,15 @@ import Myth from "@/components/mythComps/Myth";
 import { MythType } from "@/types/mythType";
 import Modal from "@/components/Modal";
 import Grid from "@/components/Grid";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function Myths() {
 
-  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<string | null>(null);
   const [myths, setMyths] = useState<MythType[]>([]);
-  const [title, setTitle] = useState("");
-  const [summary, setSummary] = useState("");
+  
+  const mythForm = useFormState({ title: "", summary: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,42 +26,33 @@ export default function Myths() {
     fetchData();
   }, []);
 
-  const elements = {
-    title: {
-      label: "Title",
-      value: title,
-      setValue: setTitle
-    },
-    summary: {
-      label: "Summary",
-      value: summary,
-      setValue: setSummary
-    }
-  }
+  const elements = buildFormElements(mythForm.form, mythForm.update, {
+    title: { label: "Title" },
+    summary: { label: "Summary" }
+  });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("myths").insert({ title: title.trim(), summary: summary.trim() });
-    setTitle("");
-    setSummary("");
-    setOpen(false);
+    await supabase.from("myths").insert({ title: mythForm.form.title.trim(), summary: mythForm.form.summary.trim() });
+    mythForm.reset();
+    setOpenModal(null);
   }
 
   return (
     <Grid
       title="The Chronicles"
       quote="Legends are but truths that time has forgotten."
-      button={{ label: "Add Myth", onClick: () => setOpen(true) }}
+      button={{ label: "Add Myth", onClick: () => setOpenModal("myth") }}
       gridStyle="md:grid-cols-2 lg:grid-cols-3"
       data={myths}
       dataComponent={Myth}>
       <Modal
         heading="Add Myth"
-        open={open}
-        setOpen={setOpen}
+        open={openModal === "myth"}
+        setOpen={setOpenModal}
         elements={elements}
         handleSubmit={handleSubmit}
-        disabled={title.trim() === ""}
+        disabled={mythForm.form.title.trim() === ""}
       />
     </Grid>
   );

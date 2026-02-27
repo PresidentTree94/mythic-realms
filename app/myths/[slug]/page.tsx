@@ -6,23 +6,19 @@ import { MythType } from "@/types/mythType";
 import { InspirationType } from "@/types/inspirationType";
 import MythInsp from "@/components/mythComps/MythInsp";
 import Modal from "@/components/Modal";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
 
 export default function MythPage() {
 
   const { slug } = useParams();
+  const [openModal, setOpenModal] = useState<string | null>(null);
+
   const [myth, setMyth] = useState<MythType>();
   const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
-  const [mythOpen, setMythOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [summary, setSummary] = useState("");
-
-  const [contributionOpen, setContributionOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [newName, setNewName] = useState("");
-  const [location, setLocation] = useState("");
-  const [markers, setMarkers] = useState<string[]>([]);
-  const [contribution, setContribution] = useState("");
+  const mythForm = useFormState({ title: "", summary: "" });
+  const contributionForm = useFormState({ name: "", newName: "", location: "", markers: [] as string[], contribution: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,92 +33,71 @@ export default function MythPage() {
     fetchData();
   }, [slug]);
 
-  const mythElements = {
-    title: {
-      label: "Title",
-      value: title,
-      setValue: setTitle
-    },
-    summary: {
-      label: "Summary",
-      value: summary,
-      setValue: setSummary
-    }
-  }
+  const mythElements = buildFormElements(mythForm.form, mythForm.update, {
+    title: { label: "Title" },
+    summary: { label: "Summary" }
+  });
 
   useEffect(() => {
     if (myth) {
-      setTitle(myth.title);
-      setSummary(myth.summary);
+      mythForm.setForm({
+        title: myth.title,
+        summary: myth.summary
+      });
     }
   }, [myth]);
 
   const handleMythSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("myths").update({ title: title.trim(), summary: summary.trim() }).eq("id", slug);
-    setTitle("");
-    setSummary("");
-    setMythOpen(false);
+    await supabase.from("myths").update({ title: mythForm.form.title.trim(), summary: mythForm.form.summary.trim() }).eq("id", slug);
+    mythForm.reset();
+    setOpenModal(null);
   }
 
-  const contributionElements = {
+  const contributionElements = buildFormElements(contributionForm.form, contributionForm.update, {
     name: {
       label: "Name",
-      value: name,
-      setValue: setName,
       options: inspirations.map(i => i.name),
       defaultOption: "Select Inspiration"
     },
-    newName: {
-      label: "New Name",
-      value: newName,
-      setValue: setNewName
-    },
-    location: {
-      label: "Location",
-      value: location,
-      setValue: setLocation
-    },
+    newName: { label: "New Name" },
+    location: { label: "Location" },
     markers: {
       label: "Markers",
-      value: markers,
-      setValue: setMarkers,
       options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
     },
-    contribution: {
-      label: "Contribution",
-      value: contribution,
-      setValue: setContribution
-    }
-  }
+    contribution: { label: "Contribution" }
+  });
 
   useEffect(() => {
-    if (name) {
-      const inspiration = inspirations.find(i => i.name === name);
-      setLocation(inspiration?.location ?? "");
-      setMarkers(inspiration?.markers ?? []);
+    if (contributionForm.form.name) {
+      const inspiration = inspirations.find(i => i.name === contributionForm.form.name);
+      contributionForm.setForm({
+        ...contributionForm.form,
+        location: inspiration?.location ?? "",
+        markers: inspiration?.markers ?? []
+      });
     } else {
-      setMarkers([]);
-      setLocation("");
+      contributionForm.setForm({
+        ...contributionForm.form,
+        location: "",
+        markers: []
+      });
     }
-  }, [name, inspirations]);
+  }, [contributionForm.form.name, inspirations]);
 
   const handleContributionSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     const { data } = await supabase.from("inspirations").upsert({
-      name: name ? name : newName.trim(),
-      location: location.trim(),
-      markers: markers
+      name: contributionForm.form.name ? contributionForm.form.name : contributionForm.form.newName.trim(),
+      location: contributionForm.form.location.trim(),
+      markers: contributionForm.form.markers
     }, { onConflict: "name" }).select().single();
     if (data) {
-      await supabase.from("myth_insp").insert({ myth_id: slug, inspiration_id: data.id, contribution: contribution.trim() });
+      await supabase.from("myth_insp").insert({ myth_id: slug, inspiration_id: data.id, contribution: contributionForm.form.contribution.trim() });
     }
-    setName("");
-    setNewName("");
-    setLocation("");
-    setMarkers([]);
-    setContribution("");
-    setContributionOpen(false);
+    contributionForm.reset();
+    setOpenModal(null);
   }
 
   return (
@@ -130,8 +105,8 @@ export default function MythPage() {
       <h2 className="mt-16 text-center">{myth?.title}</h2>
       <p className="card font-serif">{myth?.summary}</p>
       <div className="flex gap-4 justify-center flex-wrap">
-        <button onClick={() => setMythOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
-        <button onClick={() => setContributionOpen(true)} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
+        <button onClick={() => setOpenModal("myth")} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
+        <button onClick={() => setOpenModal("contribution")} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
       </div>
       <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {myth?.myth_insp.map((mythInsp) => 
@@ -140,19 +115,19 @@ export default function MythPage() {
       </article>
       <Modal
         heading="Edit Myth"
-        open={mythOpen}
-        setOpen={setMythOpen}
+        open={openModal === "myth"}
+        setOpen={setOpenModal}
         elements={mythElements}
         handleSubmit={handleMythSubmit}
-        disabled={title.trim() === ""}
+        disabled={mythForm.form.title.trim() === ""}
       />
       <Modal
         heading="Add Contribution"
-        open={contributionOpen}
-        setOpen={setContributionOpen}
+        open={openModal === "contribution"}
+        setOpen={setOpenModal}
         elements={contributionElements}
         handleSubmit={handleContributionSubmit}
-        disabled={name.trim() === "" && newName.trim() === ""}
+        disabled={contributionForm.form.name.trim() === "" && contributionForm.form.newName.trim() === ""}
       />
     </>
   );
