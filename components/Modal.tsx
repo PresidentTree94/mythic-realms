@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 
+type ModalType = "character" | "relation" | "inspiration" | null;
+
 export default function Modal({
   heading, open, setOpen, elements, handleSubmit, handleDelete, disabled
 }:Readonly<{
   heading: string;
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: (open: ModalType) => void;
   elements: Record<string, any>;
   handleSubmit: React.SubmitEventHandler<HTMLFormElement>;
   handleDelete?: () => void;
@@ -46,7 +48,7 @@ export default function Modal({
           <div className="col-span-2 grid grid-cols-2 gap-4 mt-6">
             <button type="submit" disabled={disabled} className={`${disabled ? "bg-secondary" : "bg-primary"} text-background px-4 py-2 font-heading font-medium cursor-pointer ${handleDelete && "col-span-full"}`}>Submit</button>
             {handleDelete && <button type="button" onClick={handleDeleteClick} className={`${verifyDelete ? "bg-base" : "bg-secondary"} text-background px-4 py-2 font-heading font-medium cursor-pointer`}>Delete</button>}
-            <button type="button" onClick={() => {setVerifyDelete(false); setOpen(false);}} className="bg-secondary text-background px-4 py-2 font-heading font-medium cursor-pointer">Cancel</button>
+            <button type="button" onClick={() => {setVerifyDelete(false); setOpen(null);}} className="bg-secondary text-background px-4 py-2 font-heading font-medium cursor-pointer">Cancel</button>
           </div>
         </form>
       </div>

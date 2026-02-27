@@ -11,15 +11,17 @@ import Relation from "@/components/characterComps/Relation";
 import MythSum from "@/components/MythSum";
 import Modal from "@/components/Modal";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
+import useFormState from "@/hooks/useFormState";
+import buildFormElements from "@/utils/buildFormElements";
+
+type Modal = "character" | "relation" | "inspiration" | null;
 
 export default function CharacterPage() {
 
   const { slug } = useParams();
-  const [characterOpen, setCharacterOpen] = useState(false);
-  const [relationOpen, setRelationOpen] = useState(false);
-  const [inspirationOpen, setInspirationOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<Modal>(null);
 
-  const [character, setCharacter] = useState<CharacterType>();
+  const [characterData, setCharacterData] = useState<CharacterType>();
   const [characters, setCharacters] = useState<CharacterType[]>([]);
   const [relatives, setRelatives] = useState<CharacterType[]>([]);
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
@@ -45,14 +47,9 @@ export default function CharacterPage() {
     markers: [] as string[]
   };
 
-  const [characterForm, setCharacterForm] = useState(initialCharacterForm);
-  const updateCharacter = (key: string, value: any) => setCharacterForm(prev => ({ ...prev, [key]: value }));
-
-  const [relationForm, setRelationForm] = useState({ relationName: "", relationType: "" });
-  const updateRelation = (key: string, value: any) => setRelationForm(prev => ({ ...prev, [key]: value }));
-
-  const [inspirationForm, setInspirationForm] = useState(initialInspirationForm);
-  const updateInspiration = (key: string, value: any) => setInspirationForm(prev => ({ ...prev, [key]: value }));
+  const character = useFormState(initialCharacterForm);
+  const relation = useFormState({ relationName: "", relationType: "" });
+  const inspiration = useFormState(initialInspirationForm);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,7 +65,7 @@ export default function CharacterPage() {
         supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`)
       ]);
       setCharacters(characters ?? []);
-      setCharacter(characters?.find(c => c.id === Number(slug)));
+      setCharacterData(characters?.find(c => c.id === Number(slug)));
       setRelatives(relatives ?? []);
       setTerritories(territories ?? []);
       setMyths(myths ?? []);
@@ -79,225 +76,177 @@ export default function CharacterPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id).order("title", { ascending: true });
+      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", characterData?.inspirations.id).order("title", { ascending: true });
       setMyths(myths ?? []);
     }
     fetchData();
-  }, [character]);
+  }, [characterData]);
 
   useEffect(() => {
-    if (character) {
-      setCharacterForm({
-        name: character.name,
-        pronunciation: character.pronunciation,
-        meaning: character.meaning,
-        gender: character.gender,
-        status: character.status,
-        markers: character.markers,
-        homeland: territories.find(t => t.id === character.territory_id)?.name ?? "",
-        father: character.father,
-        mother: character.mother
+    if (characterData) {
+      character.setForm({
+        name: characterData.name,
+        pronunciation: characterData.pronunciation,
+        meaning: characterData.meaning,
+        gender: characterData.gender,
+        status: characterData.status,
+        markers: characterData.markers,
+        homeland: territories.find(t => t.id === characterData.territory_id)?.name ?? "",
+        father: characterData.father,
+        mother: characterData.mother
       });
-      setInspirationForm({
-        name: character.inspirations.name,
-        meaning: character.inspirations.meaning,
-        location: character.inspirations.location,
-        markers: character.inspirations.markers
+      inspiration.setForm({
+        name: characterData.inspirations.name,
+        meaning: characterData.inspirations.meaning,
+        location: characterData.inspirations.location,
+        markers: characterData.inspirations.markers
       });
     }
-  }, [character]);
+  }, [characterData, territories]);
 
-  const characterElements = {
-    name: {
-      label: "Name", 
-      value: characterForm.name, 
-      setValue: (value: string) => updateCharacter("name", value)
-    },
-    pronunciation: {
-      label: "Pronunciation",
-      value: characterForm.pronunciation,
-      setValue: (value: string) => updateCharacter("pronunciation", value)
-    },
-    meaning: {
-      label: "Meaning",
-      value: characterForm.meaning,
-      setValue: (value: string) => updateCharacter("meaning", value)
-    },
+  const characterElements = buildFormElements(character.form, character.update, {
+    name: { label: "Name" },
+    pronunciation: { label: "Pronunciation" },
+    meaning: { label: "Meaning" },
     gender: {
       label: "Gender",
-      value: characterForm.gender,
-      setValue: (value: string) => updateCharacter("gender", value),
       options: ["Male", "Female"],
       defaultOption: "Select Gender"
     },
     markers: {
       label: "Markers",
-      value: characterForm.markers,
-      setValue: (value: string[]) => updateCharacter("markers", value),
       options: Object.keys(PANTHEON_MARKERS)
     },
     homeland: {
       label: "Homeland",
-      value: characterForm.homeland,
-      setValue: (value: string) => updateCharacter("homeland", value),
       options: territories.map(t => t.name),
       defaultOption: "Select Homeland"
     },
     status: {
       label: "Status",
-      value: characterForm.status,
-      setValue: (value: string) => updateCharacter("status", value),
-      options: characterForm.gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
+      options: character.form.gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
       defaultOption: "Select Status"
     },
-    father: {
-      label: "Father",
-      value: characterForm.father,
-      setValue: (value: string) => updateCharacter("father", value)
-    },
-    mother: {
-      label: "Mother",
-      value: characterForm.mother,
-      setValue: (value: string) => updateCharacter("mother", value)
-    }
-  }
+    father: { label: "Father" },
+    mother: { label: "Mother" }
+  });
 
   const handleCharacterSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("fantasy_characters").update({
-      name: characterForm.name.trim(),
-      pronunciation: characterForm.pronunciation.trim(),
-      meaning: '"' + characterForm.meaning.trim() + '"',
-      gender: characterForm.gender.trim(),
-      status: characterForm.status,
-      markers: characterForm.markers,
-      territory_id: territories.find(t => t.name === characterForm.homeland)?.id,
-      father: characterForm.father.trim(),
-      mother: characterForm.mother.trim()
+      name: character.form.name.trim(),
+      pronunciation: character.form.pronunciation.trim(),
+      meaning: '"' + character.form.meaning.trim() + '"',
+      gender: character.form.gender,
+      status: character.form.status,
+      markers: character.form.markers,
+      territory_id: territories.find(t => t.name === character.form.homeland)?.id,
+      father: character.form.father.trim(),
+      mother: character.form.mother.trim()
     }).eq("id", slug);
-    setCharacterForm(initialCharacterForm);
-    setCharacterOpen(false);
+    character.reset();
+    setOpenModal(null);
   }
 
   const relationList = useMemo(() => {
     const list: {id: number, name: string, relation: string}[] = [];
     relatives.forEach(relative => {
-      if (relative.name === characterForm.father && characterForm.father) {
+      if (relative.name === character.form.father && character.form.father) {
         list.push({id: relative.id, name: relative.name, relation: "Father"});
       }
-      if (relative.name === characterForm.mother && characterForm.mother) {
+      if (relative.name === character.form.mother && character.form.mother) {
         list.push({id: relative.id, name: relative.name, relation: "Mother"});
       }
-      if ((relative.father === characterForm.father && characterForm.father) || (relative.mother === characterForm.mother && characterForm.mother)) {
+      if ((relative.father === character.form.father && character.form.father) || (relative.mother === character.form.mother && character.form.mother)) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
       }
-      if (((relative.father === characterForm.name) || relative.mother === characterForm.name) && characterForm.name) {
+      if (((relative.father === character.form.name) || relative.mother === character.form.name) && character.form.name) {
         list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male" ? "Son" : "Daughter"});
       }
     });
     list.push(...relationships.map(rel => {
-      const relativeId = rel.first_character === character?.id ? rel.second_character : rel.first_character;
+      const relativeId = rel.first_character === characterData?.id ? rel.second_character : rel.first_character;
       const relative = characters.find(c => c.id === relativeId);
       const marriage = rel.type === "Spouse" ? relative?.gender === "Male" ? "Husband" : "Wife" : rel.type;
       return {id: relativeId, name: relative?.name ?? "", relation: marriage};
     }));
     return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [relatives, relationships, character, characters, characterForm]);
+  }, [relatives, relationships, characterData, characters, character.form]);
 
-  const relationElements = {
+  const relationElements = buildFormElements(relation.form, relation.update, {
     relationName: {
       label: "Name",
-      value: relationForm.relationName,
-      setValue: (value: string) => updateRelation("relationName", value),
       options: characters.filter(c => c.id !== Number(slug)).filter(c => !relationList.some(r => r.id === c.id)).map(c => c.name),
       defaultOption: "Select Character"
     },
     relationType: {
       label: "Type",
-      value: relationForm.relationType,
-      setValue: (value: string) => updateRelation("relationType", value),
       options: ["Spouse", "Lover"],
       defaultOption: "Select Type"
     }
-  }
+  });
 
   const handleRelationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("relationships").insert({
-      first_character: character?.id,
-      second_character: characters.find(c => c.name === relationForm.relationName)?.id,
-      type: relationForm.relationType
+      first_character: characterData?.id,
+      second_character: characters.find(c => c.name === relation.form.relationName)?.id,
+      type: relation.form.relationType
     });
-    setRelationForm({ relationName: "", relationType: "" });
-    setRelationOpen(false);
+    relation.reset();
+    setOpenModal(null);
   }
 
-  const inspirationElements = {
-    name: {
-      label: "Name",
-      value: inspirationForm.name,
-      setValue: (value: string) => updateInspiration("name", value)
-    },
-    meaning: {
-      label: "Meaning",
-      value: inspirationForm.meaning,
-      setValue: (value: string) => updateInspiration("meaning", value)
-    },
-    location: {
-      label: "Location",
-      value: inspirationForm.location,
-      setValue: (value: string) => updateInspiration("location", value)
-    },
+  const inspirationElements = buildFormElements(inspiration.form, inspiration.update, {
+    name: { label: "Name" },
+    meaning: { label: "Meaning" },
+    location: { label: "Location" },
     markers: {
       label: "Markers",
-      value: inspirationForm.markers,
-      setValue: (value: string[]) => updateInspiration("markers", value),
       options: Object.keys(INSPIRATION_MARKERS)
     }
-  }
+  });
 
   const handleInspirationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     await supabase.from("inspirations").update({
-      name: inspirationForm.name.trim(),
-      meaning: inspirationForm.meaning.trim(),
-      location: inspirationForm.location.trim(),
-      markers: inspirationForm.markers
-    }).eq("id", character?.inspiration_id);
-    setInspirationForm(initialInspirationForm);
-    setInspirationOpen(false);
+      name: inspiration.form.name.trim(),
+      meaning: inspiration.form.meaning.trim(),
+      location: inspiration.form.location,
+      markers: inspiration.form.markers
+    }).eq("id", characterData?.inspiration_id);
+    inspiration.reset();
+    setOpenModal(null);
   }
 
   const characterCategories = [
-    {label: "Pronunciation", value: character?.pronunciation},
-    {label: "Meaning", value: character?.meaning},
-    {label: "Gender", value: character?.gender},
-    {label: "Markers", value: character?.markers.map(marker => {
+    {label: "Pronunciation", value: characterData?.pronunciation},
+    {label: "Meaning", value: characterData?.meaning},
+    {label: "Gender", value: characterData?.gender},
+    {label: "Markers", value: characterData?.markers.map(marker => {
       const Icon = PANTHEON_MARKERS[marker];
       return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
     })},
-    {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name ?? ""}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name ?? ""}`},
-    {label: "Status", value: character?.status}
+    {label: "Homeland", value: `${territories.find(t => t.id === characterData?.territory_id)?.name ?? ""}, ${territories.find(t => t.id === characterData?.territory_id)?.kingdoms.name ?? ""}`},
+    {label: "Status", value: characterData?.status}
   ];
 
   const inspirationCategories = [
     {label: "Meaning", value: ""},
-    {label: "Location", value: character?.inspirations.location},
-    {label: "Markers", value: character?.inspirations.markers.map(marker => {
+    {label: "Location", value: characterData?.inspirations.location},
+    {label: "Markers", value: characterData?.inspirations.markers.map(marker => {
       const Icon = INSPIRATION_MARKERS[marker];
       return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
     })},
     {label: "Myths", value: myths.length}
   ];
 
-  console.log(myths);
-
   return (
     <>
-      <h2 className="mt-16 text-center">{character?.name}</h2>
+      <h2 className="mt-16 text-center">{characterData?.name}</h2>
       <div className="flex justify-center gap-4 flex-wrap">
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setCharacterOpen(true)}>Edit Character</button>
-        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setRelationOpen(true)}>Add Relation</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpenModal("character")}>Edit Character</button>
+        <button className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer" onClick={() => setOpenModal("relation")}>Add Relation</button>
       </div>
       <section className="@container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Book className="h-8 w-auto" />Legend</h3>
@@ -318,11 +267,11 @@ export default function CharacterPage() {
           ))}
         </article>
       </section>
-      {character?.inspiration_id && <section className="space-y-8 @container">
+      {characterData?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
-        <h3 className="text-center">{character?.inspirations.name}</h3>
+        <h3 className="text-center">{characterData?.inspirations.name}</h3>
         <div className="text-center">
-          <button className="bg-primary text-background text-lg font-medium font-heading px-4 py-2 cursor-pointer" onClick={() => setInspirationOpen(true)}>Edit Inspiration</button>
+          <button className="bg-primary text-background text-lg font-medium font-heading px-4 py-2 cursor-pointer" onClick={() => setOpenModal("inspiration")}>Edit Inspiration</button>
         </div>
         <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body">
           {inspirationCategories.map(category => (
@@ -340,27 +289,27 @@ export default function CharacterPage() {
       </section>}
       <Modal
         heading="Edit Character"
-        open={characterOpen}
-        setOpen={setCharacterOpen}
+        open={openModal === "character"}
+        setOpen={setOpenModal}
         elements={characterElements}
         handleSubmit={handleCharacterSubmit}
-        disabled={characterForm.name.trim() === ""}
+        disabled={character.form.name.trim() === ""}
       />
       <Modal
         heading="Add Relation"
-        open={relationOpen}
-        setOpen={setRelationOpen}
+        open={openModal === "relation"}
+        setOpen={setOpenModal}
         elements={relationElements}
         handleSubmit={handleRelationSubmit}
-        disabled={relationForm.relationName === "" || relationForm.relationType === ""}
+        disabled={relation.form.relationName === "" || relation.form.relationType === ""}
       />
       <Modal
         heading="Edit Inspiration"
-        open={inspirationOpen}
-        setOpen={setInspirationOpen}
+        open={openModal === "inspiration"}
+        setOpen={setOpenModal}
         elements={inspirationElements}
         handleSubmit={handleInspirationSubmit}
-        disabled={inspirationForm.name.trim() === ""}
+        disabled={inspiration.form.name.trim() === ""}
       />
     </>
   );
