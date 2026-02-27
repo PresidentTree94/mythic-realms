@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Lato, Cinzel } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/Navbar";
 
 const lato = Lato({
   variable: "--font-lato",
@@ -28,8 +27,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${cinzel.variable} ${lato.variable} antialiased`}>
         <div className="before:content-[''] before:fixed before:inset-0 before:bg-[url('/hero.png')] before:bg-cover before:bg-center before:opacity-20 before:-z-1"></div>
-        <Navbar />
-        <main className="space-y-16 px-4 pt-16 max-w-7xl mx-auto">{children}</main>
+        {children}
       </body>
     </html>
   );
