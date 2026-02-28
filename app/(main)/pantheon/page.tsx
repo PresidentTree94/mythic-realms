@@ -47,7 +47,7 @@ export default function Pantheon() {
       title="Pantheon"
       quote="Thrones in the heavens, shadows on the earth. Each kingdom a reflection of a divine will."
       button={{label: "Add Deity", onClick: () => setOpenModal("deity")}}
-      gridStyle="grid-cols-3"
+      gridStyle="sm:grid-cols-2 lg:grid-cols-3"
       data={deities}
       dataComponent={Patron}>
       <Modal
