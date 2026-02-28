@@ -60,7 +60,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
               </div>
             </div>
             <p className="text-xs font-body italic mb-2">{data.inspirations.location}</p>
-            <p className="font-serif italic mb-2">{data.inspirations.tagline}</p>
+            <p className="font-serif italic mb-2 text-xs">{data.inspirations.tagline}</p>
             <p className="font-serif">{data.contribution}</p>
           </div>
           <button onClick={() => setOpenModal("contribution")} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>

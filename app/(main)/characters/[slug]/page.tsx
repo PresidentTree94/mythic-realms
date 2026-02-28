@@ -294,7 +294,7 @@ export default function CharacterPage() {
         <div className="text-center">
           <button className="bg-primary text-background text-lg font-medium font-heading px-4 py-2 cursor-pointer" onClick={() => setOpenModal("inspiration")}>Edit Inspiration</button>
         </div>
-        <p className="card font-serif italic text-center">{character?.inspirations.tagline}</p>
+        {character.inspirations.tagline && <p className="card font-serif italic text-center">{character?.inspirations.tagline}</p>}
         <Overview categories={inspirationCategories} />
         <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {myths.map(myth => (
