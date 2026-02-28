@@ -10,6 +10,7 @@ export type CharacterType = {
   status: string;
   father: string;
   mother: string;
+  notes: string[];
   territory_id: number;
   inspiration_id: number;
   inspirations: InspirationType;

@@ -1,23 +1,25 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useParams } from "next/navigation";
+import { redirect, useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
 import { TerritoryType } from "@/types/territoryType";
 import { MythType } from "@/types/mythType";
 import { RelationType } from "@/types/relationType";
-import { Book, Users, ScrollText } from "lucide-react";
+import { Book, Users, File, ScrollText, Send, Trash } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
 import MythSum from "@/components/MythSum";
 import Modal from "@/components/Modal";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
 import buildFormElements from "@/utils/buildFormElements";
+import { refresh } from "next/cache";
 
 export default function CharacterPage() {
 
   const { slug } = useParams();
   const [openModal, setOpenModal] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
   const [character, setCharacter] = useState<CharacterType>();
   const [characters, setCharacters] = useState<CharacterType[]>([]);
@@ -35,7 +37,8 @@ export default function CharacterPage() {
     homeland: "",
     status: "",
     father: "",
-    mother: ""
+    mother: "",
+    notes: [] as string[]
   });
   const relation = useFormState({ relationName: "", relationType: "" });
   const inspiration = useFormState({ name: "", meaning: "", location: "", markers: [] as string[] });
@@ -82,7 +85,8 @@ export default function CharacterPage() {
         markers: character.markers,
         homeland: territories.find(t => t.id === character.territory_id)?.name ?? "",
         father: character.father,
-        mother: character.mother
+        mother: character.mother,
+        notes: character.notes
       });
       inspiration.setForm({
         name: character.inspirations.name,
@@ -208,6 +212,26 @@ export default function CharacterPage() {
     setOpenModal(null);
   }
 
+  const handleNotesSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    await supabase.from("fantasy_characters").update({
+      notes: [...(character?.notes ?? []), note.trim()]
+    }).eq("id", slug);
+    setNote("");
+    window.location.reload();
+  }
+
+  const handleNoteDelete = async (index: number) => {
+    if (character) {
+      const updatedNotes = [...character.notes];
+      updatedNotes.splice(index, 1);
+      await supabase.from("fantasy_characters").update({
+        notes: updatedNotes
+      }).eq("id", slug);
+    }
+    window.location.reload();
+  }
+
   const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
     {label: "Meaning", value: character?.meaning},
@@ -255,6 +279,18 @@ export default function CharacterPage() {
             <Relation key={relative.name} data={relative} />
           ))}
         </article>
+      </section>
+      <section className="font-body">
+        <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><File className="h-8 w-auto" />Notes</h3>
+        <form className="flex items-center gap-2 my-8" onSubmit={handleNotesSubmit}>
+          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a character note..." className="flex-1 card px-4 py-2 outline-none focus:border-secondary" />
+          <button className="bg-primary flex justify-center items-center h-10 w-10 cursor-pointer"><Send className="h-4 w-auto text-background" /></button>
+        </form>
+        <div className="space-y-4">
+          {character?.notes.map((note, index) => (
+            <p key={index} className="card p-4 flex items-center justify-between gap-2">{note}<Trash className="h-4 w-auto cursor-pointer" onClick={() => handleNoteDelete(index)}/></p>
+          ))}
+        </div>
       </section>
       {character?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
