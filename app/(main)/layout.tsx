@@ -8,7 +8,7 @@ export default function RootLayout({
   return (
     <>
       <Navbar />
-      <main className="space-y-16 px-4 pt-16 max-w-7xl mx-auto">{children}</main>
+      <main className="space-y-16 px-8 pt-16 max-w-7xl mx-auto">{children}</main>
     </>
   );
 }

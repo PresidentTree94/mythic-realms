@@ -14,7 +14,7 @@ export default function Character({ data }: { data: CharacterType }) {
           })}
         </div>
         <div>
-          <h3 className="text-white">{data.name}</h3>
+          <h3 className="text-white text-2xl">{data.name}</h3>
           <p className="font-body text-secondary italic text-sm border-l-2 border-secondary pl-2">Inspired by {data.inspiration_id === null ?"???" : data.inspirations.name}</p>
         </div>
       </div>
