@@ -288,7 +288,7 @@ export default function CharacterPage() {
         </form>
         <div className="space-y-4">
           {character?.notes.map((note, index) => (
-            <p key={index} className="card p-4 flex items-center justify-between gap-2">{note}<Trash className="h-4 w-auto cursor-pointer" onClick={() => handleNoteDelete(index)}/></p>
+            <p key={index} className="card p-4 flex items-center justify-between gap-2">{note}<Trash className="h-4 w-auto shrink-0 cursor-pointer" onClick={() => handleNoteDelete(index)}/></p>
           ))}
         </div>
       </section>
