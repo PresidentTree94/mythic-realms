@@ -129,7 +129,7 @@ export default function CharacterPage() {
     await supabase.from("fantasy_characters").update({
       name: characterForm.form.name.trim(),
       pronunciation: characterForm.form.pronunciation.trim(),
-      meaning: '"' + characterForm.form.meaning.trim() + '"',
+      meaning: characterForm.form.meaning.trim(),
       gender: characterForm.form.gender,
       status: characterForm.form.status,
       markers: characterForm.form.markers,
