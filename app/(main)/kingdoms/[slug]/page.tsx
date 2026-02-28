@@ -99,7 +99,7 @@ export default function KingdomPage() {
   const categories = [
     {label: "Crest", value: kingdom?.crest},
     {label: "Government", value: kingdom?.government},
-    {label: "Deity", value: kingdom?.deities?.patron},
+    {label: "Patron", value: kingdom?.deities?.patron},
     {label: "Territories", value: territories.length}
   ];
 

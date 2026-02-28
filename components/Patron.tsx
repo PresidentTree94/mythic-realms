@@ -46,7 +46,7 @@ export default function Patron({ data }:Readonly<{ data: DeityType }>) {
             {Icon && <Icon className="h-6 w-auto text-secondary"/>}
           </div>
           <h3 className="mt-4 mb-2">{data.patron}</h3>
-          <p className="font-serif italic">Patron of {data.representations}</p>
+          <p className="font-serif italic">Deity of {data.representations}</p>
           <div className="flex items-center gap-2 text-secondary mt-4 mb-2">
             <Sparkles className="h-4 w-auto" />
             <span className="uppercase font-bold text-xs">Divine blessing</span>
