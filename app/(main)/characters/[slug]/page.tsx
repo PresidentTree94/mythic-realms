@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { redirect, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
 import { TerritoryType } from "@/types/territoryType";
 import { MythType } from "@/types/mythType";
@@ -9,11 +9,11 @@ import { RelationType } from "@/types/relationType";
 import { Book, Users, File, ScrollText, Send, Trash } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
 import MythSum from "@/components/MythSum";
+import Overview from "@/components/Overview";
 import Modal from "@/components/Modal";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
 import buildFormElements from "@/utils/buildFormElements";
-import { refresh } from "next/cache";
 
 export default function CharacterPage() {
 
@@ -41,7 +41,7 @@ export default function CharacterPage() {
     notes: [] as string[]
   });
   const relation = useFormState({ relationName: "", relationType: "" });
-  const inspiration = useFormState({ name: "", meaning: "", location: "", markers: [] as string[] });
+  const inspiration = useFormState({ name: "", meaning: "", tagline: "",location: "", markers: [] as string[] });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,6 +91,7 @@ export default function CharacterPage() {
       inspiration.setForm({
         name: character.inspirations.name,
         meaning: character.inspirations.meaning,
+        tagline: character.inspirations.tagline,
         location: character.inspirations.location,
         markers: character.inspirations.markers
       });
@@ -193,6 +194,7 @@ export default function CharacterPage() {
   const inspirationElements = buildFormElements(inspiration.form, inspiration.update, {
     name: { label: "Name" },
     meaning: { label: "Meaning" },
+    tagline: { label: "Tagline" },
     location: { label: "Location" },
     markers: {
       label: "Markers",
@@ -205,6 +207,7 @@ export default function CharacterPage() {
     await supabase.from("inspirations").update({
       name: inspiration.form.name.trim(),
       meaning: inspiration.form.meaning.trim(),
+      tagline: inspiration.form.tagline.trim(),
       location: inspiration.form.location,
       markers: inspiration.form.markers
     }).eq("id", character?.inspiration_id);
@@ -263,14 +266,7 @@ export default function CharacterPage() {
       </div>
       <section className="@container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Book className="h-8 w-auto" />Legend</h3>
-        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body mt-8">
-          {characterCategories.map(category => (
-            <React.Fragment key={category.label}>
-              <span className="font-semibold font-serif">{category.label}</span>
-              <span className="flex justify-center @sm:justify-start">{category.value}</span>
-            </React.Fragment>
-          ))}
-        </article>
+        <Overview categories={characterCategories} />
       </section>
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Lineage & Kin</h3>
@@ -298,14 +294,8 @@ export default function CharacterPage() {
         <div className="text-center">
           <button className="bg-primary text-background text-lg font-medium font-heading px-4 py-2 cursor-pointer" onClick={() => setOpenModal("inspiration")}>Edit Inspiration</button>
         </div>
-        <article className="card grid grid-cols-1 @sm:grid-cols-[auto_1fr] @2xl:grid-cols-[auto_1fr_auto_1fr] items-center gap-4 text-center @sm:text-left font-body">
-          {inspirationCategories.map(category => (
-            <React.Fragment key={category.label}>
-              <span className="font-semibold font-serif">{category.label}</span>
-              <span className="flex justify-center @sm:justify-start">{category.value}</span>
-            </React.Fragment>
-          ))}
-        </article>
+        <p className="card font-serif italic text-center">{character?.inspirations.tagline}</p>
+        <Overview categories={inspirationCategories} />
         <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {myths.map(myth => (
             <MythSum key={myth.id} data={myth} />

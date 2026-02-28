@@ -12,6 +12,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const contributionForm = useFormState({
     name: data.inspirations.name,
+    tagline: data.inspirations.tagline,
     location: data.inspirations.location,
     markers: data.inspirations.markers,
     contribution: data.contribution
@@ -19,6 +20,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const elements = buildFormElements(contributionForm.form, contributionForm.update, {
     name: { label: "Name" },
+    tagline: { label: "Tagline" },
     location: { label: "Location" },
     markers: { label: "Markers", options: Object.keys(INSPIRATION_MARKERS) },
     contribution: { label: "Contribution" }
@@ -26,7 +28,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("inspirations").update({ name: contributionForm.form.name.trim(), location: contributionForm.form.location.trim(), markers: contributionForm.form.markers }).eq("id", data.inspirations.id);
+    await supabase.from("inspirations").update({ name: contributionForm.form.name.trim(), tagline: contributionForm.form.tagline.trim(), location: contributionForm.form.location.trim(), markers: contributionForm.form.markers }).eq("id", data.inspirations.id);
     await supabase.from("myth_insp").update({ contribution: contributionForm.form.contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
     contributionForm.reset();
     setOpenModal(null);
@@ -58,6 +60,7 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
               </div>
             </div>
             <p className="text-xs font-body italic mb-2">{data.inspirations.location}</p>
+            <p className="font-serif italic mb-2">{data.inspirations.tagline}</p>
             <p className="font-serif">{data.contribution}</p>
           </div>
           <button onClick={() => setOpenModal("contribution")} className="bg-secondary text-background font-medium font-heading px-4 py-2 cursor-pointer w-full">Edit</button>

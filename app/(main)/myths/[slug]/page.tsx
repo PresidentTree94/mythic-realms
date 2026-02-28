@@ -18,7 +18,7 @@ export default function MythPage() {
   const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
   const mythForm = useFormState({ title: "", summary: "" });
-  const contributionForm = useFormState({ name: "", newName: "", location: "", markers: [] as string[], contribution: "" });
+  const contributionForm = useFormState({ name: "", newName: "", tagline: "", location: "", markers: [] as string[], contribution: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +61,7 @@ export default function MythPage() {
       defaultOption: "Select Inspiration"
     },
     newName: { label: "New Name" },
+    tagline: { label: "Tagline" },
     location: { label: "Location" },
     markers: {
       label: "Markers",
@@ -74,12 +75,14 @@ export default function MythPage() {
       const inspiration = inspirations.find(i => i.name === contributionForm.form.name);
       contributionForm.setForm({
         ...contributionForm.form,
+        tagline: inspiration?.tagline ?? "",
         location: inspiration?.location ?? "",
         markers: inspiration?.markers ?? []
       });
     } else {
       contributionForm.setForm({
         ...contributionForm.form,
+        tagline: "",
         location: "",
         markers: []
       });
@@ -90,6 +93,7 @@ export default function MythPage() {
     e.preventDefault();
     const { data } = await supabase.from("inspirations").upsert({
       name: contributionForm.form.name ? contributionForm.form.name : contributionForm.form.newName.trim(),
+      tagline: contributionForm.form.tagline.trim(),
       location: contributionForm.form.location.trim(),
       markers: contributionForm.form.markers
     }, { onConflict: "name" }).select().single();

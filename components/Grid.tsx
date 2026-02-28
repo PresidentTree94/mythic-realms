@@ -2,8 +2,9 @@ import React from "react";
 import { MythType } from "@/types/mythType";
 import { KingdomType } from "@/types/kingdomType";
 import { CharacterType } from "@/types/characterType";
+import { DeityType } from "@/types/deityType";
 
-export default function Grid<T extends CharacterType | MythType | KingdomType>({
+export default function Grid<T extends CharacterType | MythType | KingdomType | DeityType>({
   title, quote, button, gridStyle, data, dataComponent: DataComponent, children
 }:Readonly<{
   title: string,

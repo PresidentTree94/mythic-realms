@@ -1,3 +1,5 @@
+import { DeityType } from "./deityType";
+
 export type KingdomType = {
   id: number;
   name: string;
@@ -15,4 +17,5 @@ export type KingdomType = {
     religion: string;
     kingdom_id: number;
   }[];
+  deities: DeityType;
 }
