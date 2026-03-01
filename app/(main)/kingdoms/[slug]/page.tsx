@@ -12,6 +12,7 @@ import Counterpart from "@/components/kingdomComps/Counterpart";
 import Overview from "@/components/Overview";
 import Modal from "@/components/Modal";
 import Relation from "@/components/characterComps/Relation";
+import { PANTHEON_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
 import buildFormElements from "@/utils/buildFormElements";
 
@@ -41,7 +42,6 @@ export default function KingdomPage() {
     }
     fetchData();
   }, [slug]);
-  console.log(kingdom);
 
   const greek = kingdom?.counterparts.find(counterpart => counterpart.type === "Greek");
   const medieval = kingdom?.counterparts.find(counterpart => counterpart.type === "Medieval");
@@ -96,10 +96,11 @@ export default function KingdomPage() {
     setOpenModal(null);
   }
 
+  const Icon = kingdom?.deities?.patron ? PANTHEON_MARKERS[kingdom.deities.patron] : null;
   const categories = [
     {label: "Crest", value: kingdom?.crest},
     {label: "Government", value: kingdom?.government},
-    {label: "Patron", value: kingdom?.deities?.patron},
+    {label: "Patron", value: Icon ? <Icon className="h-5 w-auto text-secondary" /> : kingdom?.deities?.patron},
     {label: "Territories", value: territories.length}
   ];
 
