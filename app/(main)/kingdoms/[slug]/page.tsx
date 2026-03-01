@@ -35,7 +35,7 @@ export default function KingdomPage() {
       setKingdom(kingdom);
       const { data: territories } = await supabase.from("territories").select("*").eq("kingdom_id", slug).order("name", { ascending: true });
       setTerritories(territories ?? []);
-      const { data: characters } = await supabase.from("fantasy_characters").select("*").in("territory_id", territories?.map(t => t.id) ?? []).order("name", { ascending: true });
+      const { data: characters } = await supabase.from("fantasy_characters").select("*").or(`homeland_id.in.(${territories?.map(t => t.id)}),residence_id.in.(${territories?.map(t => t.id)})`).order("name", { ascending: true });
       setCharacters(characters ?? []);
       const { data: deities } = await supabase.from("deities").select("*").order("patron", { ascending: true });
       setDeities(deities ?? []);
@@ -119,7 +119,7 @@ export default function KingdomPage() {
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Users className="h-8 w-auto" />Notable Residents</h3>
         <article className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
           {characters.map(character => (
-            <Relation key={character.id} data={{id: character.id, name: character.name, relation: character.status}} />
+            <Relation key={character.id} data={{id: character.id, name: character.name, relation: territories.map(t => t.id).includes(character.homeland_id) ? "Native" : "Foreign"}} />
           ))}
         </article>
       </section>

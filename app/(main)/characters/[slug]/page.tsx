@@ -35,6 +35,7 @@ export default function CharacterPage() {
     gender: "",
     markers: [] as string[],
     homeland: "",
+    residence: "",
     status: "",
     father: "",
     mother: "",
@@ -83,7 +84,8 @@ export default function CharacterPage() {
         gender: character.gender,
         status: character.status,
         markers: character.markers,
-        homeland: territories.find(t => t.id === character.territory_id)?.name ?? "",
+        homeland: territories.find(t => t.id === character.homeland_id)?.name ?? "",
+        residence: territories.find(t => t.id === character.residence_id)?.name ?? "",
         father: character.father,
         mother: character.mother,
         notes: character.notes
@@ -116,6 +118,11 @@ export default function CharacterPage() {
       options: territories.map(t => t.name),
       defaultOption: "Select Homeland"
     },
+    residence: {
+      label: "Residence",
+      options: territories.map(t => t.name),
+      defaultOption: "Select Residence"
+    },
     status: {
       label: "Status",
       options: characterForm.form.gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
@@ -134,7 +141,8 @@ export default function CharacterPage() {
       gender: characterForm.form.gender,
       status: characterForm.form.status,
       markers: characterForm.form.markers,
-      territory_id: territories.find(t => t.name === characterForm.form.homeland)?.id,
+      homeland_id: territories.find(t => t.name === characterForm.form.homeland)?.id,
+      residence_id: territories.find(t => t.name === characterForm.form.residence)?.id,
       father: characterForm.form.father.trim(),
       mother: characterForm.form.mother.trim()
     }).eq("id", slug);
@@ -243,8 +251,10 @@ export default function CharacterPage() {
       const Icon = PANTHEON_MARKERS[marker];
       return Icon ? <Icon key={marker} className="h-5 w-auto text-secondary" /> : null;
     })},
-    {label: "Homeland", value: `${territories.find(t => t.id === character?.territory_id)?.name ?? ""}, ${territories.find(t => t.id === character?.territory_id)?.kingdoms.name ?? ""}`},
-    {label: "Status", value: character?.status}
+    {label: "Homeland", value: `${territories.find(t => t.id === character?.homeland_id)?.name ?? ""}, ${territories.find(t => t.id === character?.homeland_id)?.kingdoms.name ?? ""}`},
+    {label: "Residence", value: `${territories.find(t => t.id === character?.residence_id)?.name ?? ""}, ${territories.find(t => t.id === character?.residence_id)?.kingdoms.name ?? ""}`},
+    {label: "Status", value: character?.status},
+    {label: "Relationships", value: relationList.length}
   ];
 
   const inspirationCategories = [

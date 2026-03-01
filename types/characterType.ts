@@ -11,7 +11,8 @@ export type CharacterType = {
   father: string;
   mother: string;
   notes: string[];
-  territory_id: number;
+  homeland_id: number;
+  residence_id: number;
   inspiration_id: number;
   inspirations: InspirationType;
 }
