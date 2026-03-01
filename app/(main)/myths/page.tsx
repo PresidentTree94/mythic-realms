@@ -13,7 +13,7 @@ export default function Myths() {
   const [openModal, setOpenModal] = useState<string | null>(null);
   const [myths, setMyths] = useState<MythType[]>([]);
   
-  const mythForm = useFormState({ title: "", summary: "" });
+  const mythForm = useFormState({ title: "", subtitle: "", summary: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,12 +28,13 @@ export default function Myths() {
 
   const elements = buildFormElements(mythForm.form, mythForm.update, {
     title: { label: "Title" },
+    subtitle: { label: "Subtitle" },
     summary: { label: "Summary" }
   });
 
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("myths").insert({ title: mythForm.form.title.trim(), summary: mythForm.form.summary.trim() });
+    await supabase.from("myths").insert({ title: mythForm.form.title.trim(), subtitle: mythForm.form.subtitle.trim(), summary: mythForm.form.summary.trim() });
     mythForm.reset();
     setOpenModal(null);
   }

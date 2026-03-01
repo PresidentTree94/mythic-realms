@@ -7,6 +7,7 @@ export default function MythSum({ data }: { data: MythType }) {
       <div className="h-2 w-full bg-gradient-to-r from-primary via-secondary to-primary"></div>
       <div className="p-6">
         <h4>{data.title}</h4>
+        <p className="text-xs italic font-body">{data.subtitle}</p>
         <p className="mt-2">{data.myth_insp[0].contribution}</p>
       </div>
     </Link>

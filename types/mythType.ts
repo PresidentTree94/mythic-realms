@@ -3,6 +3,7 @@ import { InspirationType } from "./inspirationType";
 export type MythType = {
   id: number;
   title: string;
+  subtitle: string;
   summary: string;
   myth_insp: {
     myth_id: number;

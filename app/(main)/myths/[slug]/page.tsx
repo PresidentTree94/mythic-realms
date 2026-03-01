@@ -17,7 +17,7 @@ export default function MythPage() {
   const [myth, setMyth] = useState<MythType>();
   const [inspirations, setInspirations] = useState<InspirationType[]>([]);
 
-  const mythForm = useFormState({ title: "", summary: "" });
+  const mythForm = useFormState({ title: "", subtitle: "", summary: "" });
   const contributionForm = useFormState({ name: "", newName: "", tagline: "", location: "", markers: [] as string[], contribution: "" });
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export default function MythPage() {
 
   const mythElements = buildFormElements(mythForm.form, mythForm.update, {
     title: { label: "Title" },
+    subtitle: { label: "Subtitle" },
     summary: { label: "Summary" }
   });
 
@@ -42,6 +43,7 @@ export default function MythPage() {
     if (myth) {
       mythForm.setForm({
         title: myth.title,
+        subtitle: myth.subtitle,
         summary: myth.summary
       });
     }
@@ -49,7 +51,7 @@ export default function MythPage() {
 
   const handleMythSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("myths").update({ title: mythForm.form.title.trim(), summary: mythForm.form.summary.trim() }).eq("id", slug);
+    await supabase.from("myths").update({ title: mythForm.form.title.trim(), subtitle: mythForm.form.subtitle.trim(), summary: mythForm.form.summary.trim() }).eq("id", slug);
     mythForm.reset();
     setOpenModal(null);
   }
@@ -107,7 +109,10 @@ export default function MythPage() {
   return (
     <>
       <h2 className="mt-16 text-center">{myth?.title}</h2>
-      <p className="card font-serif">{myth?.summary}</p>
+      <div className="card text-center space-y-2">
+        <p className="text-sm font-body italic">{myth?.subtitle}</p>
+        <p className="font-serif">{myth?.summary}</p>
+      </div>
       <div className="flex gap-4 justify-center flex-wrap">
         <button onClick={() => setOpenModal("myth")} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Edit Myth</button>
         <button onClick={() => setOpenModal("contribution")} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Contribution</button>
