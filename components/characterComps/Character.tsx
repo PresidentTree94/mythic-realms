@@ -15,7 +15,7 @@ export default function Character({ data }: { data: { character: CharacterType, 
           })}
         </div>
         <div>
-          <div className="flex items-center gap-2 flex-wrap font-semibold font-body text-xs uppercase tracking-tighter">
+          <div className="flex items-center gap-2 flex-wrap font-semibold font-body text-xs uppercase tracking-tighter mb-2">
             {data.homeland && <span className="bg-background/80 text-primary px-2 py-1 backdrop-blur-sm">{data.homeland.name}, {data.homeland.kingdoms.name}</span>}
             {data.residence && <span className="bg-secondary/80 text-[hsl(25,30%,15%)] px-2 py-1 backdrop-blur-sm">{data.residence.name}, {data.residence.kingdoms.name}</span>}
           </div>
