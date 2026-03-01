@@ -135,7 +135,7 @@ export default function Characters() {
         <button onClick={() => setOpenModal("character")} className="bg-primary text-background text-lg font-medium font-heading px-8 py-4 cursor-pointer">Add Character</button>
       </div>
       <div className="flex items-center gap-4">
-        <input type="text" placeholder="Search by name or inspiration..." value={filterForm.form.search} onChange={(e) => filterForm.update("search", e.target.value)} className="flex-1 bg-background px-2 py-1 border border-border outline-none focus:border-secondary" />
+        <input type="text" placeholder="Search by name or inspiration..." value={filterForm.form.search} onChange={(e) => filterForm.update("search", e.target.value)} className="w-full bg-background px-2 py-1 border border-border outline-none focus:border-secondary" />
         <details className="relative group">
           <summary className="flex items-center gap-2 bg-secondary text-background px-4 py-2 text-sm font-heading font-medium cursor-pointer group-open:bg-base"><Funnel className="h-4 w-auto" />Filter</summary>
           <div className="absolute right-0 top-13 z-1 card w-60 font-body space-y-4">
