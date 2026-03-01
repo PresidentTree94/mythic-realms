@@ -154,7 +154,7 @@ export default function Characters() {
       </div>
       <article className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {filteredCharacters.map(character => (
-          <Character key={character.id} data={character} />
+          <Character key={character.id} data={{character, homeland: territories.find(t => t.id === character.homeland_id)!, residence: territories.find(t => t.id === character.residence_id)!}} />
         ))}
       </article>
       <Modal
