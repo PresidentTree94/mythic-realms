@@ -248,7 +248,7 @@ export default function CharacterPage() {
   ];
 
   const inspirationCategories = [
-    {label: "Meaning", value: ""},
+    {label: "Meaning", value: character?.inspirations.meaning},
     {label: "Location", value: character?.inspirations.location},
     {label: "Markers", value: character?.inspirations.markers.map(marker => {
       const Icon = INSPIRATION_MARKERS[marker];
