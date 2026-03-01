@@ -15,7 +15,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="fixed w-full top-0 h-16 grid grid-cols-[1fr_4fr] sm:grid-cols-[1fr_auto] sm:items-center sm:p-4 bg-background/95 border-b border-border backdrop-blur z-1">
+    <header className="fixed w-full top-0 h-16 grid grid-cols-[1fr_4fr] sm:grid-cols-[1fr_auto] sm:items-center sm:p-4 bg-background/95 border-b border-border backdrop-blur z-2">
       <Link href="/" className="font-heading font-bold text-xl tracking-wider text-primary uppercase flex items-center justify-center sm:justify-start"><span className="sm:hidden">MR</span><span className="hidden sm:inline">Mythic Realms</span></Link>
       <nav className="text-sm font-body font-medium grid grid-cols-4 sm:grid-cols-[repeat(4,auto)] sm:gap-6">
         {links.map((l, index) =>

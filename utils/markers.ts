@@ -5,6 +5,7 @@ export const PANTHEON_MARKERS: Record<string, LucideIcon> = {
   "Epoch": Hourglass,
   "Fervor": Flame,
   "Radiant": Sun,
+  "Solstice": Wheat,
   "Umbral": Moon,
   "Vigil": BowArrow,
   "Wayfinder": Compass,
