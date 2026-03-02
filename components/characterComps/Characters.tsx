@@ -107,7 +107,7 @@ export default function Characters() {
       name: characterForm.form.name.trim(),
       markers: characterForm.form.markers,
       inspiration_id: inspirationId
-    })
+    });
     characterForm.reset();
     setOpenModal(null);
     router.replace("/characters");
