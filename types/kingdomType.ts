@@ -5,6 +5,7 @@ export type KingdomType = {
   name: string;
   crest: string;
   government: string;
+  notes: string[];
   counterparts: {
     id: number;
     name: string;

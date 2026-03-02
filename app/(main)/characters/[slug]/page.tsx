@@ -8,8 +8,9 @@ import { MythType } from "@/types/mythType";
 import { RelationType } from "@/types/relationType";
 import { Book, Users, File, ScrollText, Send, Trash } from "lucide-react";
 import Relation from "@/components/characterComps/Relation";
-import MythSum from "@/components/MythSum";
+import MythSum from "@/components/mythComps/MythSum";
 import Overview from "@/components/Overview";
+import Notes from "@/components/Notes";
 import Modal from "@/components/Modal";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
@@ -225,20 +226,15 @@ export default function CharacterPage() {
 
   const handleNotesSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await supabase.from("fantasy_characters").update({
-      notes: [...(character?.notes ?? []), note.trim()]
-    }).eq("id", slug);
+    await supabase.from("fantasy_characters").update({ notes: [...(character?.notes ?? []), note.trim()] }).eq("id", slug);
     setNote("");
-    window.location.reload();
   }
 
   const handleNoteDelete = async (index: number) => {
     if (character) {
       const updatedNotes = [...character.notes];
       updatedNotes.splice(index, 1);
-      await supabase.from("fantasy_characters").update({
-        notes: updatedNotes
-      }).eq("id", slug);
+      await supabase.from("fantasy_characters").update({ notes: updatedNotes }).eq("id", slug);
     }
     window.location.reload();
   }
@@ -286,7 +282,14 @@ export default function CharacterPage() {
           ))}
         </article>
       </section>
-      <section className="font-body">
+      <Notes
+        data={character}
+        note={note}
+        setNote={setNote}
+        handleSubmit={handleNotesSubmit}
+        handleDelete={handleNoteDelete}
+      />
+      {/*<section className="font-body">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><File className="h-8 w-auto" />Notes</h3>
         <form className="flex items-center gap-2 my-8" onSubmit={handleNotesSubmit}>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a character note..." className="flex-1 card px-4 py-2 outline-none focus:border-secondary" />
@@ -297,7 +300,7 @@ export default function CharacterPage() {
             <p key={index} className="card p-4 flex items-center justify-between gap-2">{note}<Trash className="h-4 w-auto shrink-0 cursor-pointer" onClick={() => handleNoteDelete(index)}/></p>
           ))}
         </div>
-      </section>
+      </section>*/}
       {character?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
         <h3 className="text-center">{character?.inspirations.name}</h3>

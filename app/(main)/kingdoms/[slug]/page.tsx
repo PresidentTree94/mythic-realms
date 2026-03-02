@@ -12,6 +12,7 @@ import Counterpart from "@/components/kingdomComps/Counterpart";
 import Overview from "@/components/Overview";
 import Modal from "@/components/Modal";
 import Relation from "@/components/characterComps/Relation";
+import Notes from "@/components/Notes";
 import { PANTHEON_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
 import buildFormElements from "@/utils/buildFormElements";
@@ -20,6 +21,7 @@ export default function KingdomPage() {
 
   const { slug } = useParams();
   const [openModal, setOpenModal] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
   const [kingdom, setKingdom] = useState<KingdomType>();
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
@@ -104,6 +106,21 @@ export default function KingdomPage() {
     {label: "Territories", value: territories.length}
   ];
 
+  const handleNotesSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+      e.preventDefault();
+      await supabase.from("kingdoms").update({ notes: [...(kingdom?.notes ?? []), note.trim()] }).eq("id", slug);
+      setNote("");
+    }
+  
+    const handleNoteDelete = async (index: number) => {
+      if (kingdom) {
+        const updatedNotes = [...kingdom.notes];
+        updatedNotes.splice(index, 1);
+        await supabase.from("kingdoms").update({ notes: updatedNotes }).eq("id", slug);
+      }
+      window.location.reload();
+    }
+
   return (
     <>
       <h2 className="mt-16 text-center">{kingdom?.name}</h2>
@@ -131,6 +148,13 @@ export default function KingdomPage() {
           ))}
         </article>
       </section>
+      <Notes
+        data={kingdom}
+        note={note}
+        setNote={setNote}
+        handleSubmit={handleNotesSubmit}
+        handleDelete={handleNoteDelete}
+      />
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Map className="h-8 w-auto" />Counterparts</h3>
         <article className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
