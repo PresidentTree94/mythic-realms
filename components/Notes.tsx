@@ -1,9 +1,11 @@
 import { File, Trash, Send } from "lucide-react";
+import { CharacterType } from "@/types/characterType";
+import { KingdomType } from "@/types/kingdomType";
 
 export default function Notes({
   data, note, setNote, handleSubmit, handleDelete
 }:Readonly<{
-  data: any;
+  data: CharacterType | KingdomType | undefined;
   note: string;
   setNote: (note: string) => void;
   handleSubmit: React.SubmitEventHandler<HTMLFormElement>;

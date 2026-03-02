@@ -12,6 +12,7 @@ import Counterpart from "@/components/kingdomComps/Counterpart";
 import Overview from "@/components/Overview";
 import Modal from "@/components/Modal";
 import Relation from "@/components/characterComps/Relation";
+import useNotes from "@/hooks/useNotes";
 import Notes from "@/components/Notes";
 import { PANTHEON_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
@@ -21,7 +22,6 @@ export default function KingdomPage() {
 
   const { slug } = useParams();
   const [openModal, setOpenModal] = useState<string | null>(null);
-  const [note, setNote] = useState("");
 
   const [kingdom, setKingdom] = useState<KingdomType>();
   const [territories, setTerritories] = useState<TerritoryType[]>([]);
@@ -106,20 +106,7 @@ export default function KingdomPage() {
     {label: "Territories", value: territories.length}
   ];
 
-  const handleNotesSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-      e.preventDefault();
-      await supabase.from("kingdoms").update({ notes: [...(kingdom?.notes ?? []), note.trim()] }).eq("id", slug);
-      setNote("");
-    }
-  
-    const handleNoteDelete = async (index: number) => {
-      if (kingdom) {
-        const updatedNotes = [...kingdom.notes];
-        updatedNotes.splice(index, 1);
-        await supabase.from("kingdoms").update({ notes: updatedNotes }).eq("id", slug);
-      }
-      window.location.reload();
-    }
+  const { note, setNote, handleNoteSubmit, handleNoteDelete } = useNotes({ table: "kingdoms", id: Number(slug), existingNotes: kingdom?.notes ?? [] });
 
   return (
     <>
@@ -152,7 +139,7 @@ export default function KingdomPage() {
         data={kingdom}
         note={note}
         setNote={setNote}
-        handleSubmit={handleNotesSubmit}
+        handleSubmit={handleNoteSubmit}
         handleDelete={handleNoteDelete}
       />
       <section>
