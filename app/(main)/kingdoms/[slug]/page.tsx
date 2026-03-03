@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { KingdomType } from "@/types/kingdomType";
 import { TerritoryType } from "@/types/territoryType";
 import { CharacterType } from "@/types/characterType";
@@ -21,6 +21,7 @@ import buildFormElements from "@/utils/buildFormElements";
 export default function KingdomPage() {
 
   const { slug } = useParams();
+  const router = useRouter();
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const [kingdom, setKingdom] = useState<KingdomType>();
@@ -80,6 +81,16 @@ export default function KingdomPage() {
     }).eq("id", slug);
     kingdomForm.reset();
     setOpenModal(null);
+  }
+
+  const handleKingdomDelete = async () => {
+    const territoryIds = territories.map(t => t.id);
+    await supabase.from("fantasy_characters").update({ homeland_id: null }).in("homeland_id", territoryIds);
+    await supabase.from("fantasy_characters").update({ residence_id: null }).in("residence_id", territoryIds);
+    await supabase.from("territories").delete().eq("kingdom_id", slug);
+    await supabase.from("counterparts").delete().eq("kingdom_id", slug);
+    await supabase.from("kingdoms").delete().eq("id", slug);
+    router.replace("/kingdoms");
   }
 
   const territoryElements = buildFormElements(territoryForm.form, territoryForm.update, {
@@ -155,6 +166,7 @@ export default function KingdomPage() {
         setOpen={setOpenModal}
         elements={kingdomElements}
         handleSubmit={handleKingdomSubmit}
+        handleDelete={handleKingdomDelete}
         disabled={kingdomForm.form.name.trim() === ""}
       />
       <Modal
