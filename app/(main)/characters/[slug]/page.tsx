@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { CharacterType } from "@/types/characterType";
 import { TerritoryType } from "@/types/territoryType";
 import { MythType } from "@/types/mythType";
@@ -21,6 +21,7 @@ import buildRelationList from "@/utils/buildRelationList";
 export default function CharacterPage() {
 
   const { slug } = useParams();
+  const router = useRouter();
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const [character, setCharacter] = useState<CharacterType>();
@@ -152,6 +153,12 @@ export default function CharacterPage() {
     setOpenModal(null);
   }
 
+  const handleCharacterDelete = async () => {
+    await supabase.from("relationships").delete().or(`first_character.eq.${slug},second_character.eq.${slug}`);
+    await supabase.from("fantasy_characters").delete().eq("id", slug);
+    router.replace("/characters");
+  }
+
   const relationList = useMemo(() => buildRelationList({character, charForm: characterForm.form, characters, relatives, relationships}), [character, characterForm.form, characters, relatives, relationships]);
 
   const relationElements = buildFormElements(relation.form, relation.update, {
@@ -274,6 +281,7 @@ export default function CharacterPage() {
         setOpen={setOpenModal}
         elements={characterElements}
         handleSubmit={handleCharacterSubmit}
+        handleDelete={handleCharacterDelete}
         disabled={characterForm.form.name.trim() === ""}
       />
       <Modal
