@@ -16,6 +16,7 @@ import Modal from "@/components/Modal";
 import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 import useFormState from "@/hooks/useFormState";
 import buildFormElements from "@/utils/buildFormElements";
+import buildRelationList from "@/utils/buildRelationList";
 
 export default function CharacterPage() {
 
@@ -151,30 +152,7 @@ export default function CharacterPage() {
     setOpenModal(null);
   }
 
-  const relationList = useMemo(() => {
-    const list: {id: number, name: string, relation: string}[] = [];
-    relatives.forEach(relative => {
-      if (relative.name === characterForm.form.father && characterForm.form.father) {
-        list.push({id: relative.id, name: relative.name, relation: "Father"});
-      }
-      if (relative.name === characterForm.form.mother && characterForm.form.mother) {
-        list.push({id: relative.id, name: relative.name, relation: "Mother"});
-      }
-      if ((relative.father === characterForm.form.father && characterForm.form.father) || (relative.mother === characterForm.form.mother && characterForm.form.mother)) {
-        list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male"? "Brother" : "Sister"});
-      }
-      if (((relative.father === characterForm.form.name) || relative.mother === characterForm.form.name) && characterForm.form.name) {
-        list.push({id: relative.id, name: relative.name, relation: relative.gender === "Male" ? "Son" : "Daughter"});
-      }
-    });
-    list.push(...relationships.map(rel => {
-      const relativeId = rel.first_character === character?.id ? rel.second_character : rel.first_character;
-      const relative = characters.find(c => c.id === relativeId);
-      const marriage = rel.type === "Spouse" ? relative?.gender === "Male" ? "Husband" : "Wife" : rel.type;
-      return {id: relativeId, name: relative?.name ?? "", relation: marriage};
-    }));
-    return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [relatives, relationships, character, characters, characterForm.form]);
+  const relationList = useMemo(() => buildRelationList({character, charForm: characterForm.form, characters, relatives, relationships}), [character, characterForm.form, characters, relatives, relationships]);
 
   const relationElements = buildFormElements(relation.form, relation.update, {
     relationName: {
