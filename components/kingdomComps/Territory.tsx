@@ -1,30 +1,38 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { MapPin } from "lucide-react";
 import { TerritoryType } from "@/types/territoryType";
 import Modal from "../Modal";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import { useForm } from "@presidenttree94/form-utils";
 
 export default function Territory({ data }: { data: TerritoryType }) {
 
+  const router = useRouter();
   const [openModal, setOpenModal] = useState<string | null>(null);
-  const territoryForm = useFormState({
-    name: data.name,
-    counterpart: data.counterpart
-  });
+  const territoryForm = useForm(
+    {
+      name: data.name,
+      counterpart: data.counterpart
+    },
+    {
+      name: { label: "Name", required: true },
+      counterpart: { label: "Counterpart", required: true }
+    }
+  );
 
-  const elements = buildFormElements(territoryForm.form, territoryForm.update, {
-    name: { label: "Name" },
-    counterpart: { label: "Counterpart" }
-  });
-
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     await supabase.from("territories").update({
       name: territoryForm.form.name.trim(),
       counterpart: territoryForm.form.counterpart.trim()
     }).eq("id", data.id);
+  }
+
+  const handleDelete = async () => {
+    await supabase.from("fantasy_characters").update({ homeland_id: null }).eq("homeland_id", data.id);
+    await supabase.from("fantasy_characters").update({ residence_id: null }).eq("residence_id", data.id);
+    await supabase.from("territories").delete().eq("id", data.id);
+    router.refresh();
   }
 
   return (
@@ -39,9 +47,10 @@ export default function Territory({ data }: { data: TerritoryType }) {
         heading="Edit Territory"
         open={openModal === "territory"}
         setOpen={setOpenModal}
-        elements={elements}
+        elements={territoryForm.elements}
+        reset={territoryForm.reset}
         handleSubmit={handleSubmit}
-        disabled={territoryForm.form.name.trim() === "" || territoryForm.form.counterpart.trim() === ""}
+        handleDelete={handleDelete}
       />
     </>
   );

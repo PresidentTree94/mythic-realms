@@ -1,47 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
-import { MythType } from "@/types/mythType";
-import { InspirationType } from "@/types/inspirationType";
 import MythInsp from "@/components/mythComps/MythInsp";
 import Modal from "@/components/Modal";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import useMythData from "./useMythData";
 
 export default function MythPage() {
 
   const { slug } = useParams();
   const [openModal, setOpenModal] = useState<string | null>(null);
-
-  const [myth, setMyth] = useState<MythType>();
-  const [inspirations, setInspirations] = useState<InspirationType[]>([]);
-
-  const mythForm = useFormState({ title: "", subtitle: "", summary: "" });
-  const contributionForm = useFormState({ name: "", newName: "", tagline: "", location: "", markers: [] as string[], contribution: "" });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp( myth_id, contribution, inspirations (*) )").eq("id", slug).single();
-      const sorted = myths ? {...myths,
-        myth_insp: myths.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
-      }: null;
-      setMyth(sorted);
-      const { data: inspirations } = await supabase.from("inspirations").select("*").order("name", { ascending: true });
-      setInspirations(inspirations ?? []);
-    };
-    fetchData();
-  }, [slug]);
-
-  const mythElements = buildFormElements(mythForm.form, mythForm.update, {
-    title: { label: "Title" },
-    subtitle: { label: "Subtitle" },
-    summary: { label: "Summary" }
-  });
+  const { myth, inspirations, mythForm, handleMythSubmit, contributionForm, handleContributionSubmit } = useMythData(Number(slug));
 
   useEffect(() => {
     if (myth) {
-      mythForm.setForm({
+      mythForm.updateMany({
         title: myth.title,
         subtitle: myth.subtitle,
         summary: myth.summary
@@ -49,62 +21,23 @@ export default function MythPage() {
     }
   }, [myth]);
 
-  const handleMythSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("myths").update({ title: mythForm.form.title.trim(), subtitle: mythForm.form.subtitle.trim(), summary: mythForm.form.summary.trim() }).eq("id", slug);
-    mythForm.reset();
-    setOpenModal(null);
-  }
-
-  const contributionElements = buildFormElements(contributionForm.form, contributionForm.update, {
-    name: {
-      label: "Name",
-      options: inspirations.map(i => i.name),
-      defaultOption: "Select Inspiration"
-    },
-    newName: { label: "New Name" },
-    tagline: { label: "Tagline" },
-    location: { label: "Location" },
-    markers: {
-      label: "Markers",
-      options: ["Deity", "Demigod", "Nymph", "Seer", "Prophet"],
-    },
-    contribution: { label: "Contribution" }
-  });
-
+  
   useEffect(() => {
     if (contributionForm.form.name) {
       const inspiration = inspirations.find(i => i.name === contributionForm.form.name);
-      contributionForm.setForm({
-        ...contributionForm.form,
+      contributionForm.updateMany({
         tagline: inspiration?.tagline ?? "",
         location: inspiration?.location ?? "",
         markers: inspiration?.markers ?? []
       });
     } else {
-      contributionForm.setForm({
-        ...contributionForm.form,
+      contributionForm.updateMany({
         tagline: "",
         location: "",
         markers: []
       });
     }
   }, [contributionForm.form.name, inspirations]);
-
-  const handleContributionSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    const { data } = await supabase.from("inspirations").upsert({
-      name: contributionForm.form.name ? contributionForm.form.name : contributionForm.form.newName.trim(),
-      tagline: contributionForm.form.tagline.trim(),
-      location: contributionForm.form.location.trim(),
-      markers: contributionForm.form.markers
-    }, { onConflict: "name" }).select().single();
-    if (data) {
-      await supabase.from("myth_insp").insert({ myth_id: slug, inspiration_id: data.id, contribution: contributionForm.form.contribution.trim() });
-    }
-    contributionForm.reset();
-    setOpenModal(null);
-  }
 
   return (
     <>
@@ -126,17 +59,17 @@ export default function MythPage() {
         heading="Edit Myth"
         open={openModal === "myth"}
         setOpen={setOpenModal}
-        elements={mythElements}
+        elements={mythForm.elements}
+        reset={mythForm.reset}
         handleSubmit={handleMythSubmit}
-        disabled={mythForm.form.title.trim() === ""}
       />
       <Modal
         heading="Add Contribution"
         open={openModal === "contribution"}
         setOpen={setOpenModal}
-        elements={contributionElements}
+        elements={contributionForm.elements}
+        reset={contributionForm.reset}
         handleSubmit={handleContributionSubmit}
-        disabled={contributionForm.form.name.trim() === "" && contributionForm.form.newName.trim() === ""}
       />
     </>
   );

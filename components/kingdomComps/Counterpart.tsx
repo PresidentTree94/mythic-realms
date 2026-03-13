@@ -2,43 +2,33 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { KingdomType } from "@/types/kingdomType";
 import Modal from "../Modal";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import { useForm } from "@presidenttree94/form-utils";
 
 export default function Counterpart({ data }: { data: KingdomType["counterparts"][0] }) {
 
   const [openModal, setOpenModal] = useState<string | null>(null);
-  const counterpartForm = useFormState({
-    name: data.name,
-    founder: data.founder,
-    location: data.location,
-    primary_gov: data.primary_gov,
-    secondary_gov: data.secondary_gov,
-    economy: data.economy,
-    religion: data.religion
-  });
+  const counterpartForm = useForm(
+    {
+      name: data.name,
+      founder: data.founder,
+      location: data.location,
+      primary_gov: data.primary_gov,
+      secondary_gov: data.secondary_gov,
+      economy: data.economy,
+      religion: data.religion
+    },
+    {
+      name: { label: "Name", required: true },
+      founder: { label: "Founder" },
+      location: { label: "Location" },
+      primary_gov: { label: "Primary Gov." },
+      secondary_gov: { label: "Secondary Gov." },
+      economy: { label: "Economy" },
+      religion: { label: "Religion" }
+    }
+  );
 
-  const categories = [
-    {label: "Founder", value: data.founder},
-    {label: "Location", value: data.location},
-    {label: "Primary Gov.", value: data.primary_gov},
-    {label: "Secondary Gov.", value: data.secondary_gov},
-    {label: "Economy", value: data.economy},
-    {label: "Religion", value: data.religion}
-  ];
-
-  const elements = buildFormElements(counterpartForm.form, counterpartForm.update, {
-    name: { label: "Name" },
-    founder: { label: "Founder" },
-    location: { label: "Location" },
-    primary_gov: { label: "Primary Gov." },
-    secondary_gov: { label: "Secondary Gov." },
-    economy: { label: "Economy" },
-    religion: { label: "Religion" }
-  });
-
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     await supabase.from("counterparts").update({
       name: counterpartForm.form.name.trim(),
       founder: counterpartForm.form.founder.trim(),
@@ -48,9 +38,16 @@ export default function Counterpart({ data }: { data: KingdomType["counterparts"
       economy: counterpartForm.form.economy.trim(),
       religion: counterpartForm.form.religion.trim()
     }).eq("id", data.id);
-    counterpartForm.reset();
-    setOpenModal(null);
   }
+
+  const categories = [
+    {label: "Founder", value: data.founder},
+    {label: "Location", value: data.location},
+    {label: "Primary Gov.", value: data.primary_gov},
+    {label: "Secondary Gov.", value: data.secondary_gov},
+    {label: "Economy", value: data.economy},
+    {label: "Religion", value: data.religion}
+  ];
 
   return (
     <>
@@ -72,9 +69,9 @@ export default function Counterpart({ data }: { data: KingdomType["counterparts"
         heading="Edit Counterpart"
         open={openModal === "counterpart"}
         setOpen={setOpenModal}
-        elements={elements}
+        elements={counterpartForm.elements}
+        reset={counterpartForm.reset}
         handleSubmit={handleSubmit}
-        disabled={counterpartForm.form.name.trim() === "" || counterpartForm.form.location.trim() === ""}
       />
     </>
   );

@@ -3,35 +3,32 @@ import { supabase } from "@/lib/supabaseClient";
 import { MythType } from "@/types/mythType";
 import Modal from "../Modal";
 import { INSPIRATION_MARKERS } from "@/utils/markers";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import { useForm } from "@presidenttree94/form-utils";
 
 export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
 
   const [openModal, setOpenModal] = useState<string | null>(null);
 
-  const contributionForm = useFormState({
-    name: data.inspirations.name,
-    tagline: data.inspirations.tagline,
-    location: data.inspirations.location,
-    markers: data.inspirations.markers,
-    contribution: data.contribution
-  });
+  const contributionForm = useForm(
+    {
+      name: data.inspirations.name,
+      tagline: data.inspirations.tagline,
+      location: data.inspirations.location,
+      markers: data.inspirations.markers,
+      contribution: data.contribution
+    },
+    {
+      name: { label: "Name", required: true },
+      tagline: { label: "Tagline" },
+      location: { label: "Location" },
+      markers: { label: "Markers", options: Object.keys(INSPIRATION_MARKERS) },
+      contribution: { label: "Contribution", required: true }
+    }
+  );
 
-  const elements = buildFormElements(contributionForm.form, contributionForm.update, {
-    name: { label: "Name" },
-    tagline: { label: "Tagline" },
-    location: { label: "Location" },
-    markers: { label: "Markers", options: Object.keys(INSPIRATION_MARKERS) },
-    contribution: { label: "Contribution" }
-  });
-
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     await supabase.from("inspirations").update({ name: contributionForm.form.name.trim(), tagline: contributionForm.form.tagline.trim(), location: contributionForm.form.location.trim(), markers: contributionForm.form.markers }).eq("id", data.inspirations.id);
     await supabase.from("myth_insp").update({ contribution: contributionForm.form.contribution.trim() }).eq("myth_id", data.myth_id).eq("inspiration_id", data.inspirations.id);
-    contributionForm.reset();
-    setOpenModal(null);
   }
 
   const handleDelete = async () => {
@@ -70,10 +67,10 @@ export default function MythInsp({ data }: { data: MythType["myth_insp"][0] }) {
         heading="Edit Contribution"
         open={openModal === "contribution"}
         setOpen={setOpenModal}
-        elements={elements}
+        elements={contributionForm.elements}
+        reset={contributionForm.reset}
         handleSubmit={handleSubmit}
         handleDelete={handleDelete}
-        disabled={contributionForm.form.name.trim() === ""}
       />
     </>
   );

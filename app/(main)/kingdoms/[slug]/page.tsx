@@ -1,68 +1,37 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useParams, useRouter } from "next/navigation";
-import { KingdomType } from "@/types/kingdomType";
-import { TerritoryType } from "@/types/territoryType";
-import { CharacterType } from "@/types/characterType";
-import { DeityType } from "@/types/deityType";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Landmark, Users, MapPinned, Map } from "lucide-react";
 import Territory from "@/components/kingdomComps/Territory";
 import Counterpart from "@/components/kingdomComps/Counterpart";
 import Overview from "@/components/Overview";
 import Modal from "@/components/Modal";
 import Relation from "@/components/characterComps/Relation";
-import useNotes from "@/hooks/useNotes";
 import Notes from "@/components/Notes";
 import { PANTHEON_MARKERS } from "@/utils/markers";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import useKingdomData from "./useKingdomData";
 
 export default function KingdomPage() {
 
   const { slug } = useParams();
-  const router = useRouter();
   const [openModal, setOpenModal] = useState<string | null>(null);
-
-  const [kingdom, setKingdom] = useState<KingdomType>();
-  const [territories, setTerritories] = useState<TerritoryType[]>([]);
-  const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [deities, setDeities] = useState<DeityType[]>([]);
-
-  const kingdomForm = useFormState({ name: "", crest: "", government: "", deity: "" });
-  const territoryForm = useFormState({ name: "", counterpart: "" });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: kingdom } = await supabase.from("kingdoms").select(`*, counterparts(*), deities(*)`).eq("id", slug).single();
-      setKingdom(kingdom);
-      const { data: territories } = await supabase.from("territories").select("*").eq("kingdom_id", slug).order("name", { ascending: true });
-      setTerritories(territories ?? []);
-      const { data: characters } = await supabase.from("fantasy_characters").select("*").or(`homeland_id.in.(${territories?.map(t => t.id)}),residence_id.in.(${territories?.map(t => t.id)})`).order("name", { ascending: true });
-      setCharacters(characters ?? []);
-      const { data: deities } = await supabase.from("deities").select("*").order("patron", { ascending: true });
-      setDeities(deities ?? []);
-    }
-    fetchData();
-  }, [slug]);
+  const {
+    kingdom,
+    territories,
+    characters,
+    kingdomForm,
+    handleKingdomSubmit,
+    handleKingdomDelete,
+    territoryForm,
+    handleTerritorySubmit
+  } = useKingdomData(Number(slug));
 
   const greek = kingdom?.counterparts.find(counterpart => counterpart.type === "Greek");
   const medieval = kingdom?.counterparts.find(counterpart => counterpart.type === "Medieval");
 
-  const kingdomElements = buildFormElements(kingdomForm.form, kingdomForm.update, {
-    name: { label: "Name" },
-    crest: { label: "Crest" },
-    government: { label: "Government" },
-    deity: {
-      label: "Deity",
-      options: deities.map(d => d.patron),
-      defaultOption: "Select Deity"
-    }
-  });
-
   useEffect(() => {
     if (kingdom) {
-      kingdomForm.setForm({
+      kingdomForm.updateMany({
         name: kingdom.name,
         crest: kingdom.crest,
         government: kingdom.government,
@@ -71,44 +40,6 @@ export default function KingdomPage() {
     }
   }, [kingdom]);
 
-  const handleKingdomSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("kingdoms").update({
-      name: kingdomForm.form.name.trim(),
-      crest: kingdomForm.form.crest.trim(),
-      government: kingdomForm.form.government.trim(),
-      deity_id: deities.find(d => d.patron === kingdomForm.form.deity)?.id ?? null
-    }).eq("id", slug);
-    kingdomForm.reset();
-    setOpenModal(null);
-  }
-
-  const handleKingdomDelete = async () => {
-    const territoryIds = territories.map(t => t.id);
-    await supabase.from("fantasy_characters").update({ homeland_id: null }).in("homeland_id", territoryIds);
-    await supabase.from("fantasy_characters").update({ residence_id: null }).in("residence_id", territoryIds);
-    await supabase.from("territories").delete().eq("kingdom_id", slug);
-    await supabase.from("counterparts").delete().eq("kingdom_id", slug);
-    await supabase.from("kingdoms").delete().eq("id", slug);
-    router.replace("/kingdoms");
-  }
-
-  const territoryElements = buildFormElements(territoryForm.form, territoryForm.update, {
-    name: { label: "Name" },
-    counterpart: { label: "Counterpart" }
-  });
-
-  const handleTerritorySubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("territories").insert({
-      name: territoryForm.form.name.trim(),
-      counterpart: territoryForm.form.counterpart.trim(),
-      kingdom_id: slug
-    });
-    territoryForm.reset();
-    setOpenModal(null);
-  }
-
   const Icon = kingdom?.deities?.patron ? PANTHEON_MARKERS[kingdom.deities.patron] : null;
   const categories = [
     {label: "Crest", value: kingdom?.crest},
@@ -116,8 +47,6 @@ export default function KingdomPage() {
     {label: "Patron", value: Icon ? <Icon className="h-5 w-auto text-secondary" /> : kingdom?.deities?.patron},
     {label: "Territories", value: territories.length}
   ];
-
-  const { note, setNote, handleNoteSubmit, handleNoteDelete } = useNotes({ table: "kingdoms", id: Number(slug), existingNotes: kingdom?.notes ?? [] });
 
   return (
     <>
@@ -146,13 +75,7 @@ export default function KingdomPage() {
           ))}
         </article>
       </section>
-      <Notes
-        data={kingdom}
-        note={note}
-        setNote={setNote}
-        handleSubmit={handleNoteSubmit}
-        handleDelete={handleNoteDelete}
-      />
+      <Notes table="kingdoms" id={Number(slug)} data={kingdom} />
       <section>
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><Map className="h-8 w-auto" />Counterparts</h3>
         <article className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
@@ -164,18 +87,18 @@ export default function KingdomPage() {
         heading="Edit Kingdom"
         open={openModal === "kingdom"}
         setOpen={setOpenModal}
-        elements={kingdomElements}
+        elements={kingdomForm.elements}
+        reset={kingdomForm.reset}
         handleSubmit={handleKingdomSubmit}
         handleDelete={handleKingdomDelete}
-        disabled={kingdomForm.form.name.trim() === ""}
       />
       <Modal
         heading="Add Territory"
         open={openModal === "territory"}
         setOpen={setOpenModal}
-        elements={territoryElements}
+        elements={territoryForm.elements}
+        reset={territoryForm.reset}
         handleSubmit={handleTerritorySubmit}
-        disabled={territoryForm.form.name.trim() === "" || territoryForm.form.counterpart.trim() === ""}
       />
     </>
   );

@@ -4,38 +4,35 @@ import { DeityType } from "@/types/deityType";
 import { PANTHEON_MARKERS } from "@/utils/markers";
 import { Sparkles } from "lucide-react";
 import Modal from "./Modal";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import { useForm } from "@presidenttree94/form-utils";
 
 export default function Patron({ data }:Readonly<{ data: DeityType }>) {
 
   const Icon = PANTHEON_MARKERS[data.patron];
   const [openModal, setOpenModal] = useState<string | null>(null);
 
-  const deityForm = useFormState({
-    patron: data.patron,
-    representations: data.representations,
-    blessing: data.blessing,
-    description: data.description
-  });
+  const deityForm = useForm(
+    {
+      patron: data.patron,
+      representations: data.representations,
+      blessing: data.blessing,
+      description: data.description
+    },
+    {
+      patron: { label: "Patron", required: true },
+      representations: { label: "Representations" },
+      blessing: { label: "Blessing" },
+      description: { label: "Description" }
+    }
+  );
 
-  const elements = buildFormElements(deityForm.form, deityForm.update, {
-    patron: { label: "Patron" },
-    representations: { label: "Representations" },
-    blessing: { label: "Blessing" },
-    description: { label: "Description" }
-  });
-
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     await supabase.from("deities").update({
       patron: deityForm.form.patron.trim(),
       representations: deityForm.form.representations.trim(),
       blessing: deityForm.form.blessing.trim(),
       description: deityForm.form.description.trim()
     }).eq("id", data.id);
-    deityForm.reset();
-    setOpenModal(null);
   };
 
   return (
@@ -59,9 +56,9 @@ export default function Patron({ data }:Readonly<{ data: DeityType }>) {
         heading="Edit Deity"
         open={openModal === "deity"}
         setOpen={setOpenModal}
-        elements={elements}
+        elements={deityForm.elements}
+        reset={deityForm.reset}
         handleSubmit={handleSubmit}
-        disabled={deityForm.form.patron.trim() === ""}
       />
     </>
   );

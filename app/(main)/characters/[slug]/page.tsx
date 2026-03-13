@@ -1,86 +1,36 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useParams, useRouter } from "next/navigation";
-import { CharacterType } from "@/types/characterType";
-import { TerritoryType } from "@/types/territoryType";
-import { MythType } from "@/types/mythType";
-import { RelationType } from "@/types/relationType";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Book, Users, ScrollText } from "lucide-react";
+import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
 import Relation from "@/components/characterComps/Relation";
 import MythSum from "@/components/mythComps/MythSum";
 import Overview from "@/components/Overview";
-import useNotes from "@/hooks/useNotes";
 import Notes from "@/components/Notes";
 import Modal from "@/components/Modal";
-import { PANTHEON_MARKERS, INSPIRATION_MARKERS } from "@/utils/markers";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
-import buildRelationList from "@/utils/buildRelationList";
+import useCharacterData from "./useCharacterData";
 
 export default function CharacterPage() {
 
   const { slug } = useParams();
-  const router = useRouter();
   const [openModal, setOpenModal] = useState<string | null>(null);
-
-  const [character, setCharacter] = useState<CharacterType>();
-  const [characters, setCharacters] = useState<CharacterType[]>([]);
-  const [relatives, setRelatives] = useState<CharacterType[]>([]);
-  const [territories, setTerritories] = useState<TerritoryType[]>([]);
-  const [myths, setMyths] = useState<MythType[]>([]);
-  const [relationships, setRelationships] = useState<RelationType[]>([]);
-
-  const characterForm = useFormState({
-    name: "",
-    pronunciation: "",
-    meaning: "",
-    gender: "",
-    markers: [] as string[],
-    homeland: "",
-    residence: "",
-    status: "",
-    father: "",
-    mother: "",
-    notes: [] as string[]
-  });
-  const relation = useFormState({ relationName: "", relationType: "" });
-  const inspiration = useFormState({ name: "", meaning: "", tagline: "",location: "", markers: [] as string[] });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const [
-        { data: characters },
-        { data: relatives },
-        { data: territories },
-        { data: relationships }
-      ] = await Promise.all([
-        supabase.from("fantasy_characters").select("*, inspirations(*)").order("name", { ascending: true }),
-        supabase.from("fantasy_characters").select("*").neq("id", slug),
-        supabase.from("territories").select("*, kingdoms(name)").order("name", { ascending: true }),
-        supabase.from("relationships").select("*").or(`first_character.eq.${slug},second_character.eq.${slug}`)
-      ]);
-      setCharacters(characters ?? []);
-      setCharacter(characters?.find(c => c.id === Number(slug)));
-      setRelatives(relatives ?? []);
-      setTerritories(territories ?? []);
-      setMyths(myths ?? []);
-      setRelationships(relationships ?? []);
-    }
-    fetchData();
-  }, [slug]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp!inner(*, inspirations (*))").eq("myth_insp.inspiration_id", character?.inspirations.id).order("title", { ascending: true });
-      setMyths(myths ?? []);
-    }
-    fetchData();
-  }, [character]);
+  const {
+    character,
+    territories,
+    myths,
+    characterForm,
+    handleCharacterSubmit,
+    handleCharacterDelete,
+    relationForm,
+    relationList,
+    handleRelationSubmit,
+    inspirationForm,
+    handleInspirationSubmit
+  } = useCharacterData(Number(slug));
 
   useEffect(() => {
     if (character) {
-      characterForm.setForm({
+      characterForm.updateMany({
         name: character.name,
         pronunciation: character.pronunciation,
         meaning: character.meaning,
@@ -91,9 +41,8 @@ export default function CharacterPage() {
         residence: territories.find(t => t.id === character.residence_id)?.name ?? "",
         father: character.father,
         mother: character.mother,
-        notes: character.notes
       });
-      inspiration.setForm({
+      inspirationForm.updateMany({
         name: character.inspirations.name,
         meaning: character.inspirations.meaning,
         tagline: character.inspirations.tagline,
@@ -102,112 +51,6 @@ export default function CharacterPage() {
       });
     }
   }, [character, territories]);
-
-  const characterElements = buildFormElements(characterForm.form, characterForm.update, {
-    name: { label: "Name" },
-    pronunciation: { label: "Pronunciation" },
-    meaning: { label: "Meaning" },
-    gender: {
-      label: "Gender",
-      options: ["Male", "Female"],
-      defaultOption: "Select Gender"
-    },
-    markers: {
-      label: "Markers",
-      options: Object.keys(PANTHEON_MARKERS)
-    },
-    homeland: {
-      label: "Homeland",
-      options: territories.map(t => t.name),
-      defaultOption: "Select Homeland"
-    },
-    residence: {
-      label: "Residence",
-      options: territories.map(t => t.name),
-      defaultOption: "Select Residence"
-    },
-    status: {
-      label: "Status",
-      options: characterForm.form.gender === "Male" ? ["King", "Prince", "Citizen"] : ["Queen", "Princess", "Citizen"],
-      defaultOption: "Select Status"
-    },
-    father: { label: "Father" },
-    mother: { label: "Mother" }
-  });
-
-  const handleCharacterSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("fantasy_characters").update({
-      name: characterForm.form.name.trim(),
-      pronunciation: characterForm.form.pronunciation.trim(),
-      meaning: characterForm.form.meaning.trim(),
-      gender: characterForm.form.gender,
-      status: characterForm.form.status,
-      markers: characterForm.form.markers,
-      homeland_id: territories.find(t => t.name === characterForm.form.homeland)?.id,
-      residence_id: territories.find(t => t.name === characterForm.form.residence)?.id,
-      father: characterForm.form.father.trim(),
-      mother: characterForm.form.mother.trim()
-    }).eq("id", slug);
-    characterForm.reset();
-    setOpenModal(null);
-  }
-
-  const handleCharacterDelete = async () => {
-    await supabase.from("relationships").delete().or(`first_character.eq.${slug},second_character.eq.${slug}`);
-    await supabase.from("fantasy_characters").delete().eq("id", slug);
-    router.replace("/characters");
-  }
-
-  const relationList = useMemo(() => buildRelationList({character, charForm: characterForm.form, characters, relatives, relationships}), [character, characterForm.form, characters, relatives, relationships]);
-
-  const relationElements = buildFormElements(relation.form, relation.update, {
-    relationName: {
-      label: "Name",
-      options: characters.filter(c => c.id !== Number(slug)).filter(c => !relationList.some(r => r.id === c.id)).map(c => c.name),
-      defaultOption: "Select Character"
-    },
-    relationType: {
-      label: "Type",
-      options: ["Spouse", "Lover"],
-      defaultOption: "Select Type"
-    }
-  });
-
-  const handleRelationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("relationships").insert({
-      first_character: character?.id,
-      second_character: characters.find(c => c.name === relation.form.relationName)?.id,
-      type: relation.form.relationType
-    });
-    relation.reset();
-    setOpenModal(null);
-  }
-
-  const inspirationElements = buildFormElements(inspiration.form, inspiration.update, {
-    name: { label: "Name" },
-    meaning: { label: "Meaning" },
-    tagline: { label: "Tagline" },
-    location: { label: "Location" },
-    markers: {
-      label: "Markers",
-      options: Object.keys(INSPIRATION_MARKERS)
-    }
-  });
-
-  const handleInspirationSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("inspirations").update({
-      name: inspiration.form.name.trim(),
-      meaning: inspiration.form.meaning.trim(),
-      tagline: inspiration.form.tagline.trim(),
-      location: inspiration.form.location,
-      markers: inspiration.form.markers
-    }).eq("id", character?.inspiration_id);
-    inspiration.reset();
-    setOpenModal(null);
-  }
 
   const characterCategories = [
     {label: "Pronunciation", value: character?.pronunciation},
@@ -233,8 +76,6 @@ export default function CharacterPage() {
     {label: "Myths", value: myths.length}
   ];
 
-  const { note, setNote, handleNoteSubmit: handleNotesSubmit, handleNoteDelete } = useNotes({ table: "fantasy_characters", id: Number(slug), existingNotes: character?.notes ?? [] });
-
   return (
     <>
       <h2 className="mt-16 text-center">{character?.name}</h2>
@@ -254,13 +95,7 @@ export default function CharacterPage() {
           ))}
         </article>
       </section>
-      <Notes
-        data={character}
-        note={note}
-        setNote={setNote}
-        handleSubmit={handleNotesSubmit}
-        handleDelete={handleNoteDelete}
-      />
+      <Notes table="characters" id={Number(slug)} data={character} />
       {character?.inspiration_id && <section className="space-y-8 @container">
         <h3 className="font-medium border-b-2 border-primary pb-2 flex items-center gap-2"><ScrollText className="h-8 w-auto" />Inspiration</h3>
         <h3 className="text-center">{character?.inspirations.name}</h3>
@@ -279,26 +114,26 @@ export default function CharacterPage() {
         heading="Edit Character"
         open={openModal === "character"}
         setOpen={setOpenModal}
-        elements={characterElements}
+        elements={characterForm.elements}
+        reset={characterForm.reset}
         handleSubmit={handleCharacterSubmit}
         handleDelete={handleCharacterDelete}
-        disabled={characterForm.form.name.trim() === ""}
       />
       <Modal
         heading="Add Relation"
         open={openModal === "relation"}
         setOpen={setOpenModal}
-        elements={relationElements}
+        elements={relationForm.elements}
+        reset={relationForm.reset}
         handleSubmit={handleRelationSubmit}
-        disabled={relation.form.relationName === "" || relation.form.relationType === ""}
       />
       <Modal
         heading="Edit Inspiration"
         open={openModal === "inspiration"}
         setOpen={setOpenModal}
-        elements={inspirationElements}
+        elements={inspirationForm.elements}
+        reset={inspirationForm.reset}
         handleSubmit={handleInspirationSubmit}
-        disabled={inspiration.form.name.trim() === ""}
       />
     </>
   );

@@ -1,43 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState } from "react";
 import Myth from "@/components/mythComps/Myth";
-import { MythType } from "@/types/mythType";
 import Modal from "@/components/Modal";
 import Grid from "@/components/Grid";
-import useFormState from "@/hooks/useFormState";
-import buildFormElements from "@/utils/buildFormElements";
+import useMythData from "./useMythData";
 
 export default function Myths() {
 
   const [openModal, setOpenModal] = useState<string | null>(null);
-  const [myths, setMyths] = useState<MythType[]>([]);
-  
-  const mythForm = useFormState({ title: "", subtitle: "", summary: "" });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: myths } = await supabase.from("myths").select("*, myth_insp(inspiration_id, inspirations (id, name) )").order("title", { ascending: true });
-      const sorted = myths?.map(myth => ({...myth,
-        myth_insp: myth.myth_insp.sort((a: any, b: any) => a.inspirations.name.localeCompare(b.inspirations.name))
-      })).sort((a, b) => a.title.localeCompare(b.title));
-      setMyths(sorted ?? []);
-    }
-    fetchData();
-  }, []);
-
-  const elements = buildFormElements(mythForm.form, mythForm.update, {
-    title: { label: "Title" },
-    subtitle: { label: "Subtitle" },
-    summary: { label: "Summary" }
-  });
-
-  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    await supabase.from("myths").insert({ title: mythForm.form.title.trim(), subtitle: mythForm.form.subtitle.trim(), summary: mythForm.form.summary.trim() });
-    mythForm.reset();
-    setOpenModal(null);
-  }
+  const { myths, mythForm, handleSubmit } = useMythData();
 
   return (
     <Grid
@@ -51,9 +22,9 @@ export default function Myths() {
         heading="Add Myth"
         open={openModal === "myth"}
         setOpen={setOpenModal}
-        elements={elements}
+        elements={mythForm.elements}
+        reset={mythForm.reset}
         handleSubmit={handleSubmit}
-        disabled={mythForm.form.title.trim() === ""}
       />
     </Grid>
   );
